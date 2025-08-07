@@ -23,9 +23,9 @@ if($_POST) {
 
 
          try {
-            // ✅ 1. QUERY CORRIGIDA: Inclui todas as colunas que você quer salvar.
-            $query = "INSERT INTO usuarios (nome, email, senha, cpf, rg, cidade, endereco, complemento, tipo) 
-                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'professor')";
+
+    $query = "INSERT INTO usuarios (nome, email, senha, cpf, rg, cidade, endereco, complemento, tipo, created_at) 
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'professor', NOW())";
             
             $stmt = $db->prepare($query);
             
@@ -130,32 +130,28 @@ $teachers = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <th>Cidade</th>
                     <th>Endereço</th>
                     <th>Complemento</th>
-
                     <th>Status</th>
                     <th>Data Cadastro</th>
                 </tr>
             </thead>
-            <tbody>
-                <?php foreach($teachers as $teacher): ?>
-                    <tr>
-                        <td><?php echo htmlspecialchars($teacher['nome']); ?></td>
-                        <td><?php echo htmlspecialchars($teacher['email']); ?></td>
-                        <th><?php echo htmlspecialchars($teacher['cpf']); ?></th>
-                        <th><?php echo htmlspecialchars($teacher['rg']); ?></th>
-                        <th><?php echo htmlspecialchars($teacher['cidade']); ?></th>
-                        <th><?php echo htmlspecialchars($teacher['endereco']); ?></th>
-                        
-                        <?php 
-                        if (!empty($teacher['complemento'])) {
-                            echo htmlspecialchars($teacher['complemento']);
-                        }?>
+<tbody>
+    <?php foreach($teachers as $teacher): ?>
+        <tr>
+            <td><?php echo htmlspecialchars($teacher['nome']); ?></td>
+            <td><?php echo htmlspecialchars($teacher['email']); ?></td>
+            <td><?php echo htmlspecialchars($teacher['cpf'] ?? ''); ?></td>
+            <td><?php echo htmlspecialchars($teacher['rg'] ?? ''); ?></td>
+            <td><?php echo htmlspecialchars($teacher['cidade'] ?? ''); ?></td>
+            <td><?php echo htmlspecialchars($teacher['endereco'] ?? ''); ?></td>
+            <td><?php if (!empty($teacher['complemento'])) {
+                    echo htmlspecialchars($teacher['complemento']);
+                     }?>
+            <td><?php echo $teacher['ativo'] ? 'Ativo' : 'Inativo'; ?></td>
+            <td><?php echo date('d/m/Y', strtotime($teacher['created_at'])); ?></td>
+        </tr>
+    <?php endforeach; ?>
+</tbody>
 
-                        <td><?php echo $teacher['ativo'] ? 'Ativo' : 'Inativo'; ?></td>
-                        <td><?php echo date('d/m/Y', strtotime($teacher['created_at'])); ?></td>
-                        
-                    </tr>
-                <?php endforeach; ?>
-            </tbody>
         </table>
     <?php endif; ?>
 </div>
