@@ -1,48 +1,48 @@
 <?php
 require_once 'config/database.php';
+require_once 'includes/auth.php'; // Incluído para usar a função isAdmin()
 
 $database = new Database();
-$db = $database->getConnection();
+$db = $database->client;
 
-// Get statistics
 $stats = [];
+$error = '';
 
-if(isAdmin()) {
-    // Total teachers
-    $query = "SELECT COUNT(*) as total FROM usuarios WHERE tipo = 'professor' AND ativo = 1";
-    $stmt = $db->prepare($query);
-    $stmt->execute();
-    $stats['professores'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
-    
-    // Total students
-    $query = "SELECT COUNT(*) as total FROM alunos WHERE ativo = 1";
-    $stmt = $db->prepare($query);
-    $stmt->execute();
-    $stats['alunos'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+try {
+    if(isAdmin()) {
+        // CORREÇÃO: Total de professores usando o cliente Supabase
+        $response = $db->from('usuarios')->select('*', ['count' => 'exact'])->eq('tipo', 'professor')->eq('ativo', true)->execute();
+        $stats['professores'] = $response->count;
+        
+        // CORREÇÃO: Total de alunos usando o cliente Supabase
+        $response = $db->from('alunos')->select('*', ['count' => 'exact'])->eq('ativo', true)->execute();
+        $stats['alunos'] = $response->count;
+    }
+
+    // CORREÇÃO: Total de chamadas hoje
+    $query_chamadas = $db->from('chamadas')->select('*', ['count' => 'exact'])->eq('data_chamada', date('Y-m-d'));
+    if(!isAdmin()) {
+        $query_chamadas = $query_chamadas->eq('professor_id', $_SESSION['user_id']);
+    }
+    $response = $query_chamadas->execute();
+    $stats['chamadas_hoje'] = $response->count;
+
+    // CORREÇÃO: Chamadas recentes
+    $query_recentes = $db->from('chamadas')
+        ->select('*, professor_nome:usuarios(nome)') // JOIN com a tabela usuarios
+        ->order('created_at', ['ascending' => false])
+        ->limit(5);
+
+    if(!isAdmin()) {
+        $query_recentes = $query_recentes->eq('professor_id', $_SESSION['user_id']);
+    }
+    $response = $query_recentes->execute();
+    $recent_calls = $response->data;
+
+} catch (Exception $e) {
+    $error = 'Erro ao carregar estatísticas: ' . $e->getMessage();
 }
 
-// Total calls today
-$query = "SELECT COUNT(*) as total FROM chamadas WHERE data_chamada = CURDATE()";
-if(!isAdmin()) {
-    $query .= " AND professor_id = " . $_SESSION['user_id'];
-}
-$stmt = $db->prepare($query);
-$stmt->execute();
-$stats['chamadas_hoje'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
-
-// Recent calls
-$query = "SELECT c.*, u.nome as professor_nome FROM chamadas c 
-          LEFT JOIN usuarios u ON c.professor_id = u.id 
-          ORDER BY c.created_at DESC LIMIT 5";
-if(!isAdmin()) {
-    $query = "SELECT c.*, u.nome as professor_nome FROM chamadas c 
-              LEFT JOIN usuarios u ON c.professor_id = u.id 
-              WHERE c.professor_id = " . $_SESSION['user_id'] . "
-              ORDER BY c.created_at DESC LIMIT 5";
-}
-$stmt = $db->prepare($query);
-$stmt->execute();
-$recent_calls = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
 <div class="card">

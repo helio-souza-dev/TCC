@@ -1,40 +1,35 @@
 <?php
 require_once 'config/database.php';
+require_once 'includes/auth.php';
 
 $database = new Database();
-$db = $database->getConnection();
-
+$db = $database->client;
 $message = '';
 $error = '';
 
-// Handle form submission
-if($_POST) {
-    $action = $_POST['action'] ?? '';
+if($_POST && isset($_POST['action']) && $_POST['action'] === 'add') {
+    // CORREÇÃO: Inserção usando o cliente Supabase
+    $response = $db->from('alunos')->insert([
+        'nome' => $_POST['nome'],
+        'matricula' => $_POST['matricula'],
+        'turma' => $_POST['turma']
+    ])->execute();
     
-    if($action === 'add') {
-        $nome = $_POST['nome'] ?? '';
-        $matricula = $_POST['matricula'] ?? '';
-        $turma = $_POST['turma'] ?? '';
-        
-        try {
-            $query = "INSERT INTO alunos (nome, matricula, turma) VALUES (?, ?, ?)";
-            $stmt = $db->prepare($query);
-            $stmt->bindParam(1, $nome);
-            $stmt->bindParam(2, $matricula);
-            $stmt->bindParam(3, $turma);
-            $stmt->execute();
-            $message = 'Aluno cadastrado com sucesso!';
-        } catch(PDOException $e) {
-            $error = 'Erro ao cadastrar aluno: ' . $e->getMessage();
-        }
+    if ($response->error) {
+        $error = 'Erro ao cadastrar aluno: ' . $response->error->message;
+    } else {
+        $message = 'Aluno cadastrado com sucesso!';
     }
 }
 
-// Get all students
-$query = "SELECT * FROM alunos ORDER BY turma, nome";
-$stmt = $db->prepare($query);
-$stmt->execute();
-$students = $stmt->fetchAll(PDO::FETCH_ASSOC);
+// CORREÇÃO: Listagem de alunos usando o cliente Supabase
+$response = $db->from('alunos')->select('*')->order('turma')->order('nome')->execute();
+$students = $response->error ? [] : $response->data;
+
+if ($response->error) {
+    $error = 'Erro ao listar alunos: ' . $response->error->message;
+}
+
 ?>
 
 <div class="card">
@@ -89,11 +84,11 @@ $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <tbody>
                 <?php foreach($students as $student): ?>
                     <tr>
-                        <td><?php echo htmlspecialchars($student['nome']); ?></td>
-                        <td><?php echo htmlspecialchars($student['matricula']); ?></td>
-                        <td><?php echo htmlspecialchars($student['turma']); ?></td>
-                        <td><?php echo $student['ativo'] ? 'Ativo' : 'Inativo'; ?></td>
-                        <td><?php echo date('d/m/Y', strtotime($student['created_at'])); ?></td>
+                        <td><?php echo htmlspecialchars($student->nome); ?></td>
+                        <td><?php echo htmlspecialchars($student->matricula); ?></td>
+                        <td><?php echo htmlspecialchars($student->turma); ?></td>
+                        <td><?php echo $student->ativo ? 'Ativo' : 'Inativo'; ?></td>
+                        <td><?php echo date('d/m/Y', strtotime($student->created_at)); ?></td>
                     </tr>
                 <?php endforeach; ?>
             </tbody>

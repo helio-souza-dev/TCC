@@ -1,53 +1,68 @@
 <?php
 require_once 'config/database.php';
+require_once 'includes/auth.php';
 
 $database = new Database();
-$db = $database->getConnection();
-
+$db = $database->client;
 $message = '';
 $error = '';
 
-// Handle form submission
-if($_POST) {
-    $action = $_POST['action'] ?? '';
-    
-    if($action === 'add') {
-        $nome = $_POST['nome'] ?? '';
-        $email = $_POST['email'] ?? '';
-        $senha = password_hash($_POST['senha'], PASSWORD_DEFAULT);
-        $cpf = $_POST['cpf'] ?? "";
-        $rg = $_POST['rg'] ?? "";
-        $cidade = $_POST['cidade'] ?? "";
-        $endereco = $_POST['endereco'] ?? "";
-        $complemento = $_POST['complemento'] ?? "";
+if($_POST && isset($_POST['action']) && $_POST['action'] === 'add') {
+    $nome = $_POST['nome'] ?? '';
+    $email = $_POST['email'] ?? '';
+    $senha = $_POST['senha'] ?? ''; // Senha em texto plano
 
-
-         try {
-
-    $query = "INSERT INTO usuarios (nome, email, senha, cpf, rg, cidade, endereco, complemento, tipo, created_at) 
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'professor', NOW())";
-            
-            $stmt = $db->prepare($query);
-            
-            // ✅ 2. EXECUÇÃO OTIMIZADA: Passa um array com todas as variáveis para execute().
-            // A ordem no array deve corresponder exatamente à ordem dos '?' na query.
-            $params = [$nome, $email, $senha, $cpf, $rg, $cidade, $endereco, $complemento];
-            $stmt->execute($params);
-            
-            $message = 'Professor cadastrado com sucesso!';
-
-        } catch(PDOException $e) {
-            // Se o e-mail for duplicado ou houver outro erro, ele será capturado aqui.
-            $error = 'Erro ao cadastrar professor: ' . $e->getMessage();
+    // NOTA: A maneira correta é primeiro criar o usuário no sistema de Auth do Supabase,
+    // e depois inserir o perfil na sua tabela 'usuarios'.
+    // Uma Trigger no banco de dados é a melhor forma de automatizar a criação do perfil.
+    try {
+        // 1. Cria o usuário no Supabase Auth
+        $userResponse = $db->auth->signUp([
+            'email' => $email,
+            'password' => $senha,
+        ]);
+        
+        if ($userResponse->error) {
+            throw new Exception($userResponse->error->message);
         }
+        
+        $user_id = $userResponse->data->user->id; // ID do usuário no sistema Auth
+
+        // 2. Insere os dados do perfil na tabela 'usuarios'
+        $profileData = [
+            'id' => $user_id, // CORREÇÃO: Usa o mesmo ID do usuário autenticado
+            'nome' => $nome,
+            'email' => $email,
+            'tipo' => 'professor',
+            'cpf' => $_POST['cpf'] ?? "",
+            'rg' => $_POST['rg'] ?? "",
+            'cidade' => $_POST['cidade'] ?? "",
+            'endereco' => $_POST['endereco'] ?? "",
+            'complemento' => $_POST['complemento'] ?? "",
+        ];
+
+        $profileResponse = $db->from('usuarios')->insert($profileData)->execute();
+
+        if ($profileResponse->error) {
+            // Se falhar, idealmente você deveria deletar o usuário criado no Auth
+            $db->auth->admin->deleteUser($user_id);
+            throw new Exception($profileResponse->error->message);
+        }
+
+        $message = 'Professor cadastrado com sucesso!';
+
+    } catch (Exception $e) {
+        $error = 'Erro ao cadastrar professor: ' . $e->getMessage();
     }
 }
 
-// Get all teachers
-$query = "SELECT * FROM usuarios WHERE tipo = 'professor' ORDER BY nome";
-$stmt = $db->prepare($query);
-$stmt->execute();
-$teachers = $stmt->fetchAll(PDO::FETCH_ASSOC);
+// Lista de Professores (código existente estava correto)
+$response = $db->from('usuarios')->select('*')->eq('tipo', 'professor')->order('nome')->execute();
+$teachers = $response->error ? [] : $response->data;
+
+if ($response->error && !$error) { // Não sobrescreve o erro do formulário
+    $error = 'Erro ao listar professores: ' . $response->error->message;
+}
 ?>
 
 <div class="card">
@@ -78,38 +93,32 @@ $teachers = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <input type="password" id="senha" name="senha" required>
             </div>
 
-                    <div class="form-group">
+            <div class="form-group">
                 <label for="cpf">Cpf:</label>
                 <input type="text" id="cpf" name="cpf" required>
             </div>
 
-                    <div class="form-group">
+            <div class="form-group">
                 <label for="rg">RG:</label>
                 <input type="text" id="rg" name="rg" required>
             </div>
 
-                                <div class="form-group">
+            <div class="form-group">
                 <label for="cidade">Cidade:</label>
                 <input type="text" id="cidade" name="cidade" required>
             </div>
-    </div>
+        </div>
 
-                        <div class="form-group">
-                <label for="endereco">Endereço:</label>
-                <input type="text" id="endereco" name="endereco" required>
-            </div>
-    </div>
-                            <div class="form-group">
-                <label for="complemento">Complemento:</label>
-                <input type="text" id="complemento" name="complemento">
-            </div>
-    </div>
+        <div class="form-group">
+            <label for="endereco">Endereço:</label>
+            <input type="text" id="endereco" name="endereco" required>
+        </div>
 
+        <div class="form-group">
+            <label for="complemento">Complemento:</label>
+            <input type="text" id="complemento" name="complemento">
+        </div>
 
-    </div>
-
-
-        
         <button type="submit" class="btn">Cadastrar Professor</button>
     </form>
 </div>
@@ -134,24 +143,24 @@ $teachers = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <th>Data Cadastro</th>
                 </tr>
             </thead>
-<tbody>
-    <?php foreach($teachers as $teacher): ?>
-        <tr>
-            <td><?php echo htmlspecialchars($teacher['nome']); ?></td>
-            <td><?php echo htmlspecialchars($teacher['email']); ?></td>
-            <td><?php echo htmlspecialchars($teacher['cpf'] ?? ''); ?></td>
-            <td><?php echo htmlspecialchars($teacher['rg'] ?? ''); ?></td>
-            <td><?php echo htmlspecialchars($teacher['cidade'] ?? ''); ?></td>
-            <td><?php echo htmlspecialchars($teacher['endereco'] ?? ''); ?></td>
-            <td><?php if (!empty($teacher['complemento'])) {
-                    echo htmlspecialchars($teacher['complemento']);
-                     }?>
-            <td><?php echo $teacher['ativo'] ? 'Ativo' : 'Inativo'; ?></td>
-            <td><?php echo date('d/m/Y', strtotime($teacher['created_at'])); ?></td>
-        </tr>
-    <?php endforeach; ?>
-</tbody>
-
+            <tbody>
+                <?php foreach($teachers as $teacher): ?>
+                    <tr>
+                        <td><?php echo htmlspecialchars($teacher->nome); ?></td>
+                        <td><?php echo htmlspecialchars($teacher->email); ?></td>
+                        <td><?php echo htmlspecialchars($teacher->cpf ?? ''); ?></td>
+                        <td><?php echo htmlspecialchars($teacher->rg ?? ''); ?></td>
+                        <td><?php echo htmlspecialchars($teacher->cidade ?? ''); ?></td>
+                        <td><?php echo htmlspecialchars($teacher->endereco ?? ''); ?></td>
+                        <td><?php if (!empty($teacher->complemento)) {
+                            echo htmlspecialchars($teacher->complemento);
+                            }?>
+                        </td>
+                        <td><?php echo $teacher->ativo ? 'Ativo' : 'Inativo'; ?></td>
+                        <td><?php echo date('d/m/Y', strtotime($teacher->created_at)); ?></td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
         </table>
     <?php endif; ?>
 </div>

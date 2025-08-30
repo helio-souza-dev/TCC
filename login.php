@@ -1,5 +1,14 @@
 <?php
-require_once 'includes/auth.php';
+// ARQUIVO: login.php (adicione no topo para testar)
+$host = 'shqdmrqhddaxnvutsomv.supabase.co';
+if (gethostbyname($host) == $host) {
+    echo "ALERTA: Não foi possível resolver o host do Supabase: $host. Verifique sua conexão com a internet ou as configurações de DNS do WAMP.";
+} else {
+    echo "SUCESSO: O host do Supabase foi resolvido com sucesso.";
+}
+echo "<hr>";
+
+require_once 'includes/auth.php'; 
 
 if(isLoggedIn()) {
     header('Location: dashboard.php');
@@ -12,7 +21,8 @@ if($_POST) {
     $email = $_POST['email'] ?? '';
     $senha = $_POST['senha'] ?? '';
     
-    if(login($email, $senha)) {
+    // CORREÇÃO: Chama a função de login centralizada.
+    if (login($email, $senha)) {
         header('Location: dashboard.php');
         exit();
     } else {
