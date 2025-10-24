@@ -291,7 +291,7 @@ document.getElementById('cpf').addEventListener('input', function(e) {
     botaoGerar.addEventListener('click', function() {
         // Quando o botão for clicado:
         // 1. Gera uma nova senha
-        const novaSenha = gerarSenhaJS(12); // Gera uma senha de 12 caracteres
+        const novaSenha = gerarSenhaJS(8);
         
         // 2. Coloca a senha gerada no campo de input
         inputSenha.value = novaSenha;
@@ -341,5 +341,3 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<script>
-// ... (script existente de máscara de CPF e geração de senha)

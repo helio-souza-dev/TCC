@@ -114,7 +114,7 @@ try {
         <?php if(empty($aulas)): ?>
             <div class="alert alert-info"><p> Nenhuma aula encontrada para o filtro selecionado.</p></div>
         <?php else: ?>
-            <table class="table">
+            <table class="table" id="tabela_chamada">
                 <thead>
                     <tr>
                         <th>Data/Horário</th>
@@ -159,3 +159,23 @@ try {
 .presenca-ausente { color: #c62828; font-weight: bold; }
 .presenca-justificada { color: #6c757d; }
 </style>
+
+<script>
+// NOVO SCRIPT PARA DATATABLES
+document.addEventListener('DOMContentLoaded', function() {
+    // Usamos o jQuery, que foi carregado no dashboard.php
+    if (typeof jQuery !== 'undefined') {
+        jQuery(document).ready(function($) {
+            $('#tabela_chamada').DataTable({
+                "language": {
+                    // Arquivo de tradução oficial do DataTables para PT-BR
+                    "url": "//cdn.datatables.net/plug-ins/2.0.8/i18n/pt-BR.json" 
+                }
+            });
+        });
+    }
+});
+</script>
+
+<script>
+// ... (script existente de máscara de CPF e geração de senha)
