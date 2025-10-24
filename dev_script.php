@@ -115,12 +115,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
     <div class="container">
-        <h2>🛠️ Ferramenta de Geração de Usuários de Teste</h2>
+        <h2> Ferramenta de Geração de Usuários de Teste</h2>
 
         <?php if ($message): ?><div class="alert alert-success"><?php echo $message; ?></div><?php endif; ?>
         <?php if ($error): ?><div class="alert alert-error"><?php echo $error; ?></div><?php endif; ?>
 
-        <h3>⚡ Gerar Usuários para Teste de Capacidade</h3>
+        <h3> Gerar Usuários para Teste de Capacidade</h3>
         <form action="dev_script.php" method="POST">
             <input type="hidden" name="action" value="generate_bulk">
             <div class="form-group">

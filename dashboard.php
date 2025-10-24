@@ -37,7 +37,11 @@ $page = $_GET['page'] ?? 'home';
                 <li><a href="dashboard.php?page=alunos" class="<?php echo $page === 'alunos' ? 'active' : ''; ?>">Alunos</a></li>
                 <li><a href="dashboard.php?page=solicitacoes" class="<?php echo $page === 'solicitacoes' ? 'active' : ''; ?>">Solicitações</a></li>
             <?php endif; ?>
+            
+            <?php if(isAdmin() || isProfessor()): ?>
             <li><a href="dashboard.php?page=chamadas" class="<?php echo $page === 'chamadas' ? 'active' : ''; ?>">Aulas</a></li>
+            <?php endif; ?>
+
             <?php if(isAluno() || isProfessor()): ?>
             <li><a href="dashboard.php?page=perfil" class="<?php echo $page === 'perfil' ? 'active' : ''; ?>">Dados Pessoais</a></li>
             <?php endif; ?>
@@ -52,7 +56,7 @@ $page = $_GET['page'] ?? 'home';
                 break;
 
                 case 'editar_aula':
-                include 'pages/editar_aula.php';
+                if(isAdmin() || isProfessor()) include 'pages/editar_aula.php';
                 break;
 
             case 'editar-prof':
@@ -66,7 +70,7 @@ $page = $_GET['page'] ?? 'home';
                 break;
             
             case 'chamadas':
-                include 'pages/chamadas.php';
+                if(isAdmin() || isProfessor()) include 'pages/chamadas.php';
                 break;
             case 'nova-chamada':
                 if(isAdmin() || isProfessor()) include 'pages/nova-chamada.php';

@@ -144,6 +144,7 @@ try {
             <div class="form-group"><label>Biografia:</label><textarea readonly rows="3"><?php echo htmlspecialchars($userData['biografia'] ?? ''); ?></textarea></div>
         </div>
         <?php endif; ?>
+
         <div class="form-section" style="margin-top: 30px;">
             <h4> Alterar Senha</h4>
             <form method="POST">
@@ -154,9 +155,20 @@ try {
                     <input type="password" id="current_password" name="current_password" required>
                 </div>
 
-        <div class="form-section" style="margin-top: 30px;">
-            <h4> Alterar Senha</h4>
-
+                <div class="form-group">
+                    <label for="new_password">Nova Senha (mín. 8 caracteres):</label>
+                    <input type="password" id="new_password" name="new_password" required minlength="8">
+                </div>
+                
+                <div class="form-group">
+                    <label for="confirm_new_password">Confirmar Nova Senha:</label>
+                    <input type="password" id="confirm_new_password" oninput="checkPasswordMatch(this);" required>
+                    <small id="password_match_status"></small>
+                </div>
+                
+                <button type="submit" id="btnChangePassword" class="btn btn-primary" disabled>Alterar Senha</button>
+                </form>
+        </div>
         <div class="form-section" style="margin-top: 30px;">
             <h4> Precisa Alterar Outros Dados?</h4>
             <p>Seus dados pessoais (nome, CPF, etc.) só podem ser alterados mediante solicitação e aprovação de um administrador.</p>
@@ -170,13 +182,7 @@ try {
             </div>
         </div>
 
-
     <?php endif; ?>
-</div>
-            </form>
-        </div>
-
-
 </div>
 
 <script>
@@ -195,6 +201,10 @@ try {
             status.textContent = 'As senhas não conferem.';
             status.style.color = '#dc3545';
             button.disabled = true;
+        } else if (newPass.length > 0 && newPass.length < 8) {
+            status.textContent = 'A nova senha deve ter no mínimo 8 caracteres.';
+            status.style.color = '#dc3545';
+            button.disabled = true;
         } else {
              status.textContent = '';
              button.disabled = true;
@@ -204,5 +214,10 @@ try {
     document.getElementById('new_password').addEventListener('input', function() {
         const confirmPassInput = document.getElementById('confirm_new_password');
         checkPasswordMatch(confirmPassInput);
+    });
+
+    // Adiciona o listener de input para a confirmação de senha também, caso o usuário comece por ela
+    document.getElementById('confirm_new_password').addEventListener('input', function() {
+        checkPasswordMatch(this);
     });
 </script>

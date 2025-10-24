@@ -113,7 +113,7 @@ try {
         </div>
     <?php else: ?>
         <div class="table-responsive">
-            <table class="table">
+            <table class="table" id="tabela_aulas_home">
                 <thead>
                     <tr>
                         <th>Data e Hora</th>
@@ -176,3 +176,23 @@ try {
     color: #343a40;
 }
 </style>
+
+<script>
+// NOVO SCRIPT PARA DATATABLES
+document.addEventListener('DOMContentLoaded', function() {
+    // Usamos o jQuery, que foi carregado no dashboard.php
+    if (typeof jQuery !== 'undefined') {
+        jQuery(document).ready(function($) {
+            $('#tabela_aulas_home').DataTable({
+                "language": {
+                    // Arquivo de tradução oficial do DataTables para PT-BR
+                    "url": "//cdn.datatables.net/plug-ins/2.0.8/i18n/pt-BR.json" 
+                }
+            });
+        });
+    }
+});
+</script>
+
+<script>
+// ... (script existente de máscara de CPF e geração de senha)
