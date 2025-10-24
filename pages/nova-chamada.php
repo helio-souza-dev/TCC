@@ -1,144 +1,255 @@
 <?php
 require_once 'config/database.php';
+require_once 'includes/auth.php';
 
-$database = new Database();
-$db = $database->getConnection();
-
+// Variáveis para mensagens e para carregar as listas de alunos/professores.
 $message = '';
 $error = '';
+$students = [];
+$professors = [];
 
-// Handle form submission
-if($_POST) {
-    $turma = $_POST['turma'] ?? '';
-    $disciplina = $_POST['disciplina'] ?? '';
-    $data_chamada = $_POST['data_chamada'] ?? date('Y-m-d');
-    $presencas = $_POST['presencas'] ?? [];
+// --- LÓGICA 1: PROCESSAR O AGENDAMENTO QUANDO O FORMULÁRIO É ENVIADO ---
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['action'] === 'agendar_aula') {
     
-    try {
-        $db->beginTransaction();
-        
-        // Insert call
-        $query = "INSERT INTO chamadas (professor_id, turma, disciplina, data_chamada) VALUES (?, ?, ?, ?)";
-        $stmt = $db->prepare($query);
-        $stmt->bindParam(1, $_SESSION['user_id']);
-        $stmt->bindParam(2, $turma);
-        $stmt->bindParam(3, $disciplina);
-        $stmt->bindParam(4, $data_chamada);
-        $stmt->execute();
-        
-        $chamada_id = $db->lastInsertId();
-        
-        // Insert attendance records
-        $query = "INSERT INTO presencas (chamada_id, aluno_id, presente) VALUES (?, ?, ?)";
-        $stmt = $db->prepare($query);
-        
-        foreach($presencas as $aluno_id => $presente) {
-            $stmt->bindParam(1, $chamada_id);
-            $stmt->bindParam(2, $aluno_id);
-            $stmt->bindParam(3, $presente);
-            $stmt->execute();
+    // Pega os dados do formulário.
+    $aluno_id = $_POST['aluno_id'] ?? '';
+    $disciplina = $_POST['disciplina'] ?? '';
+    $data_aula = $_POST['data_aula'] ?? '';
+    $horario_inicio = $_POST['horario_inicio'] ?? '';
+    $horario_fim = $_POST['horario_fim'] ?? '';
+    $observacoes = $_POST['observacoes'] ?? '';
+    
+    // Validações básicas antes de ir para o banco.
+    if (empty($aluno_id) || empty($disciplina) || empty($data_aula) || empty($horario_inicio) || empty($horario_fim)) {
+        $error = "Todos os campos com * são obrigatórios.";
+    } else {
+        try {
+            // Define o ID do professor.
+            $professor_id = null;
+            if (isAdmin()) {
+                $professor_id = $_POST['professor_id'] ?? '';
+            } else {
+                $sql_prof = "SELECT id FROM professores WHERE usuario_id = ? LIMIT 1";
+                $stmt_prof = executar_consulta($conn, $sql_prof, [$_SESSION['user_id']]);
+                $professor_data = $stmt_prof->get_result()->fetch_assoc();
+                $professor_id = $professor_data['id'] ?? null;
+            }
+
+            if (!$professor_id) {
+                throw new Exception("ID do professor não foi encontrado.");
+            }
+
+            // --- INÍCIO DA NOVA LÓGICA DE VERIFICAÇÃO DUPLA ---
+
+            // VERIFICAÇÃO 1: CONFLITO DE HORÁRIO PARA O PROFESSOR
+            $sql_conflito_prof = "SELECT id FROM aulas_agendadas
+                                  WHERE professor_id = ? AND data_aula = ? AND status != 'cancelado'
+                                  AND (? < horario_fim AND ? > horario_inicio)";
+            $stmt_conflito_prof = executar_consulta($conn, $sql_conflito_prof, [
+                $professor_id, $data_aula, $horario_inicio, $horario_fim
+            ]);
+            
+            if ($stmt_conflito_prof->get_result()->fetch_assoc()) {
+                throw new Exception("Conflito de horário! O professor já tem uma aula neste período.");
+            }
+            $stmt_conflito_prof->close(); // Fecha a consulta
+
+            // VERIFICAÇÃO 2: CONFLITO DE HORÁRIO PARA O ALUNO
+            $sql_conflito_aluno = "SELECT id FROM aulas_agendadas
+                                   WHERE aluno_id = ? AND data_aula = ? AND status != 'cancelado'
+                                   AND (? < horario_fim AND ? > horario_inicio)";
+            $stmt_conflito_aluno = executar_consulta($conn, $sql_conflito_aluno, [
+                $aluno_id, $data_aula, $horario_inicio, $horario_fim
+            ]);
+
+            if ($stmt_conflito_aluno->get_result()->fetch_assoc()) {
+                throw new Exception("Conflito de horário! O aluno já tem uma aula neste período.");
+            }
+            $stmt_conflito_aluno->close(); // Fecha a consulta
+
+            // --- FIM DA NOVA LÓGICA DE VERIFICAÇÃO DUPLA ---
+            
+            // Se passou pelas duas verificações, INSERE a nova aula no banco.
+            $sql_insert = "INSERT INTO aulas_agendadas (professor_id, aluno_id, disciplina, data_aula, horario_inicio, horario_fim, observacoes, status)
+                           VALUES (?, ?, ?, ?, ?, ?, ?, 'agendado')";
+            executar_consulta($conn, $sql_insert, [
+                $professor_id, $aluno_id, $disciplina, $data_aula, 
+                $horario_inicio, $horario_fim, $observacoes
+            ]);
+            
+            $message = 'Aula agendada com sucesso!';
+            
+        } catch (Exception $e) {
+            $error = $e->getMessage();
         }
-        
-        $db->commit();
-        $message = 'Chamada realizada com sucesso!';
-        
-    } catch(PDOException $e) {
-        $db->rollback();
-        $error = 'Erro ao realizar chamada: ' . $e->getMessage();
     }
 }
 
-// Get students for selected class
-$students = [];
-$selected_turma = $_GET['turma'] ?? '';
-
-if($selected_turma) {
-    $query = "SELECT * FROM alunos WHERE turma = ? AND ativo = 1 ORDER BY nome";
-    $stmt = $db->prepare($query);
-    $stmt->bindParam(1, $selected_turma);
-    $stmt->execute();
-    $students = $stmt->fetchAll(PDO::FETCH_ASSOC);
+// --- LÓGICA 2: BUSCAR ALUNOS E PROFESSORES PARA PREENCHER O FORMULÁRIO ---
+try {
+    // Busca todos os alunos ativos.
+    $sql_alunos = "SELECT a.id, a.matricula, u.nome 
+                   FROM alunos a JOIN usuarios u ON a.usuario_id = u.id 
+                   WHERE u.ativo = 1 ORDER BY u.nome ASC";
+    $resultado_alunos = $conn->query($sql_alunos);
+    $students = $resultado_alunos->fetch_all(MYSQLI_ASSOC);
+    
+    // Busca todos os professores ativos.
+    $sql_professores = "SELECT p.id, u.nome 
+                        FROM professores p JOIN usuarios u ON p.usuario_id = u.id 
+                        WHERE u.ativo = 1 ORDER BY u.nome ASC";
+    $resultado_professores = $conn->query($sql_professores);
+    $professors = $resultado_professores->fetch_all(MYSQLI_ASSOC);
+    
+} catch(Exception $e) {
+    $error = 'Erro ao carregar listas de alunos e professores: ' . $e->getMessage();
 }
-
-// Get available classes
-$query = "SELECT DISTINCT turma FROM alunos WHERE ativo = 1 ORDER BY turma";
-$stmt = $db->prepare($query);
-$stmt->execute();
-$turmas = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
+
 <div class="card">
-    <h3>Nova Chamada</h3>
+    <h3>Agendar Nova Aula</h3>
     
     <?php if($message): ?>
-        <div class="alert alert-success"><?php echo $message; ?></div>
+        <div class="alert alert-success"><?php echo htmlspecialchars($message); ?></div>
     <?php endif; ?>
     
     <?php if($error): ?>
-        <div class="alert alert-error"><?php echo $error; ?></div>
+        <div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div>
     <?php endif; ?>
     
-    <?php if(!$selected_turma): ?>
-        <form method="GET">
-            <input type="hidden" name="page" value="nova-chamada">
+    <form method="POST" id="formAgendamento">
+        <input type="hidden" name="action" value="agendar_aula">
+        
+        
+
+
+        <div class="form-group">
+            
+
+            <label for="aluno_id">Selecionar Aluno: <span style="color: red;">*</span></label>
+            <select id="aluno_id" name="aluno_id" required>
+                <option value="">Escolha um aluno...</option>
+                <?php foreach($students as $student): ?>
+                    <option value="<?php echo htmlspecialchars($student['id']); ?>" <?php echo (isset($_POST['aluno_id']) && $_POST['aluno_id'] == $student['id']) ? 'selected' : ''; ?>>
+                        <?php echo htmlspecialchars($student['nome']); ?> - <?php echo htmlspecialchars($student['matricula'] ?? 'S/N'); ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+
+        <?php if (isAdmin()): ?>
             <div class="form-group">
-                <label for="turma">Selecione a Turma:</label>
-                <select id="turma" name="turma" required onchange="this.form.submit()">
-                    <option value="">Escolha uma turma...</option>
-                    <?php foreach($turmas as $turma): ?>
-                        <option value="<?php echo $turma['turma']; ?>"><?php echo $turma['turma']; ?></option>
+                <label for="professor_id">Agendar para o Professor: <span style="color: red;">*</span></label>
+                <select id="professor_id" name="professor_id" required>
+                    <option value="">Escolha um professor...</option>
+                    <?php foreach($professors as $prof): ?>
+                        <option value="<?php echo htmlspecialchars($prof['id']); ?>" <?php echo (isset($_POST['professor_id']) && $_POST['professor_id'] == $prof['id']) ? 'selected' : ''; ?>>
+                            <?php echo htmlspecialchars($prof['nome']); ?>
+                        </option>
                     <?php endforeach; ?>
                 </select>
             </div>
-        </form>
-    <?php else: ?>
-        <form method="POST">
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="turma">Turma:</label>
-                    <input type="text" id="turma" name="turma" value="<?php echo htmlspecialchars($selected_turma); ?>" readonly>
-                </div>
-                <div class="form-group">
-                    <label for="disciplina">Disciplina:</label>
-                    <input type="text" id="disciplina" name="disciplina" required>
-                </div>
-                <div class="form-group">
-                    <label for="data_chamada">Data:</label>
-                    <input type="date" id="data_chamada" name="data_chamada" value="<?php echo date('Y-m-d'); ?>" required>
-                </div>
+        <?php endif; ?>
+            
+        <div class="form-group">
+            <label for="disciplina">Disciplina: <span style="color: red;">*</span></label>
+            <input type="text" id="disciplina" name="disciplina" required 
+                   value="<?php echo htmlspecialchars($_POST['disciplina'] ?? ''); ?>"
+                   placeholder="Ex: Violão, Flauta">
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label for="data_aula">Data da Aula: <span style="color: red;">*</span></label>
+                <input type="text" id="data_aula" name="data_aula" required 
+                       placeholder="Selecione uma data"
+                       value="<?php echo htmlspecialchars($_POST['data_aula'] ?? date('Y-m-d')); ?>">
             </div>
             
-            <h4>Lista de Alunos</h4>
+            <div class="form-group">
+                <label for="horario_inicio">Horário de Início: <span style="color: red;">*</span></label>
+                <input type="text" id="horario_inicio" name="horario_inicio" required
+                       placeholder="Selecione um horário"
+                       value="<?php echo htmlspecialchars($_POST['horario_inicio'] ?? ''); ?>">
+            </div>
             
-            <?php if(empty($students)): ?>
-                <p>Nenhum aluno encontrado para esta turma.</p>
-            <?php else: ?>
-                <table class="table">
-                    <thead>
-                        <tr>
-                            <th>Nome</th>
-                            <th>Matrícula</th>
-                            <th>Presente</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php foreach($students as $student): ?>
-                            <tr>
-                                <td><?php echo htmlspecialchars($student['nome']); ?></td>
-                                <td><?php echo htmlspecialchars($student['matricula']); ?></td>
-                                <td>
-                                    <input type="checkbox" name="presencas[<?php echo $student['id']; ?>]" value="1" checked>
-                                </td>
-                            </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-                
-                <div style="margin-top: 20px;">
-                    <button type="submit" class="btn">Realizar Chamada</button>
-                    <a href="dashboard.php?page=nova-chamada" class="btn btn-secondary">Voltar</a>
-                </div>
-            <?php endif; ?>
-        </form>
-    <?php endif; ?>
+            <div class="form-group">
+                <label for="horario_fim">Horário de Término: <span style="color: red;">*</span></label>
+                <input type="text" id="horario_fim" name="horario_fim" required
+                       placeholder="Selecione um horário"
+                       value="<?php echo htmlspecialchars($_POST['horario_fim'] ?? ''); ?>">
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="observacoes">Observações (opcional):</label>
+            <textarea id="observacoes" name="observacoes" rows="3" 
+                      placeholder="Conteúdo da aula, materiais necessários, objetivos, etc."><?php echo htmlspecialchars($_POST['observacoes'] ?? ''); ?></textarea>
+        </div>
+        
+        <div class="flex gap-10 mt-20">
+            <button type="submit" class="btn">Agendar Aula</button>
+            <a href="dashboard.php?page=chamadas" class="btn btn-outline">Voltar para Aulas</a>
+        </div>
+    </form>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // Ativa o Tom-Select para o dropdown de Alunos
+    new TomSelect('#aluno_id', {
+        create: false, // Impede que o usuário crie novos alunos por aqui
+        sortField: {
+            field: "text",
+            direction: "asc"
+        },
+        placeholder: "Digite para buscar um aluno..."
+    });
+
+    // Verifica se o dropdown de professor existe na página (para não dar erro)
+    if (document.getElementById('professor_id')) {
+        // Ativa o Tom-Select para o dropdown de Professores
+        new TomSelect('#professor_id', {
+            create: false, // Impede que o usuário crie novos professores
+            sortField: {
+                field: "text",
+                direction: "asc"
+            },
+            placeholder: "Digite para buscar um professor..."
+        });
+    }
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    
+    // 1. Configura o seletor de DATA (em Português)
+    flatpickr("#data_aula", {
+        locale: "pt", // Usa a tradução que carregamos
+        dateFormat: "Y-m-d", // Formato que o banco de dados entende
+        altInput: true, // Mostra um formato amigável para o usuário
+        altFormat: "d/m/Y", // Formato amigável
+        minDate: "today" // Impede de agendar aulas no passado
+    });
+
+    // 2. Configura o seletor de HORÁRIO DE INÍCIO
+    flatpickr("#horario_inicio", {
+        enableTime: true, // Ativa o modo de hora
+        noCalendar: true, // Desativa o calendário
+        dateFormat: "H:i", // Formato 24h
+        time_24hr: true
+    });
+    
+    // 3. Configura o seletor de HORÁRIO DE FIM
+    flatpickr("#horario_fim", {
+        enableTime: true,
+        noCalendar: true,
+        dateFormat: "H:i",
+        time_24hr: true
+    });
+    
+});
+</script>

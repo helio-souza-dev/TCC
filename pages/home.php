@@ -1,100 +1,178 @@
 <?php
 require_once 'config/database.php';
+require_once 'includes/auth.php';
 
-$database = new Database();
-$db = $database->getConnection();
+// Variáveis para guardar os dados que virão do banco.
+$stats = ['professores' => 0, 'alunos' => 0, 'aulas_hoje' => 0];
+$recent_calls = [];
+$error = '';
 
-// Get statistics
-$stats = [];
+try {
+    // Pega o ID do usuário logado e a data de hoje.
+    $user_id = $_SESSION['user_id'];
+    $today = date('Y-m-d');
 
-if(isAdmin()) {
-    // Total teachers
-    $query = "SELECT COUNT(*) as total FROM usuarios WHERE tipo = 'professor' AND ativo = 1";
-    $stmt = $db->prepare($query);
-    $stmt->execute();
-    $stats['professores'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
+    // --- LÓGICA PARA BUSCAR AS ESTATÍSTICAS (OS CARDS) ---
+    if (isAdmin()) {
+        // Se for admin, conta tudo.
+        $stats['professores'] = $conn->query("SELECT COUNT(id) FROM usuarios WHERE tipo = 'professor' AND ativo = 1")->fetch_column();
+        $stats['alunos'] = $conn->query("SELECT COUNT(id) FROM usuarios WHERE tipo = 'aluno' AND ativo = 1")->fetch_column();
+        $stats['aulas_hoje'] = $conn->query("SELECT COUNT(id) FROM aulas_agendadas WHERE data_aula = '$today'")->fetch_column();
+    } elseif (isProfessor()) {
+        // Se for professor, conta apenas as suas aulas de hoje.
+        $stmt = executar_consulta($conn, "SELECT COUNT(id) FROM aulas_agendadas WHERE data_aula = ? AND professor_id = (SELECT id FROM professores WHERE usuario_id = ?)", [$today, $user_id]);
+        $stats['aulas_hoje'] = $stmt->get_result()->fetch_column();
+    }
+    // Alunos não veem os cards de estatísticas.
+
+
+    // --- LÓGICA PARA BUSCAR AS ÚLTIMAS 5 AULAS ---
+    $sql_recent = '';
+    $params = [];
+
+    // Monta a consulta SQL de acordo com o tipo de usuário.
+    if (isAdmin()) {
+        // Admin vê tudo.
+        $sql_recent = "SELECT aa.data_aula, aa.horario_inicio, aa.disciplina, aa.status, u_aluno.nome AS aluno_nome, u_prof.nome AS professor_nome
+                       FROM aulas_agendadas aa
+                       LEFT JOIN alunos al ON aa.aluno_id = al.id
+                       LEFT JOIN usuarios u_aluno ON al.usuario_id = u_aluno.id
+                       LEFT JOIN professores p ON aa.professor_id = p.id
+                       LEFT JOIN usuarios u_prof ON p.usuario_id = u_prof.id
+                       ORDER BY aa.data_aula DESC, aa.horario_inicio DESC LIMIT 5";
+    } elseif (isProfessor()) {
+        // Professor vê as aulas dele.
+        $sql_recent = "SELECT aa.data_aula, aa.horario_inicio, aa.disciplina, aa.status, u_aluno.nome AS aluno_nome
+                       FROM aulas_agendadas aa
+                       LEFT JOIN alunos al ON aa.aluno_id = al.id
+                       LEFT JOIN usuarios u_aluno ON al.usuario_id = u_aluno.id
+                       WHERE aa.professor_id = (SELECT id FROM professores WHERE usuario_id = ?)
+                       ORDER BY aa.data_aula DESC, aa.horario_inicio DESC LIMIT 5";
+        $params[] = $user_id;
+    } elseif (isAluno()) {
+        // Aluno vê as aulas dele.
+        $sql_recent = "SELECT aa.data_aula, aa.horario_inicio, aa.disciplina, aa.status, u_prof.nome as professor_nome
+                       FROM aulas_agendadas aa
+                       JOIN alunos al ON aa.aluno_id = al.id
+                       LEFT JOIN professores p ON aa.professor_id = p.id
+                       LEFT JOIN usuarios u_prof ON p.usuario_id = u_prof.id
+                       WHERE al.usuario_id = ?
+                       ORDER BY aa.data_aula DESC, aa.horario_inicio DESC LIMIT 5";
+        $params[] = $user_id;
+    }
     
-    // Total students
-    $query = "SELECT COUNT(*) as total FROM alunos WHERE ativo = 1";
-    $stmt = $db->prepare($query);
-    $stmt->execute();
-    $stats['alunos'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
-}
+    // Se uma consulta foi definida, executa e busca os resultados.
+    if (!empty($sql_recent)) {
+        $stmt_recent = executar_consulta($conn, $sql_recent, $params);
+        $recent_calls = $stmt_recent->get_result()->fetch_all(MYSQLI_ASSOC);
+        $stmt_recent->close();
+    }
 
-// Total calls today
-$query = "SELECT COUNT(*) as total FROM chamadas WHERE data_chamada = CURDATE()";
-if(!isAdmin()) {
-    $query .= " AND professor_id = " . $_SESSION['user_id'];
+} catch (Exception $e) {
+    $error = 'Erro ao carregar dados do painel: ' . $e->getMessage();
 }
-$stmt = $db->prepare($query);
-$stmt->execute();
-$stats['chamadas_hoje'] = $stmt->fetch(PDO::FETCH_ASSOC)['total'];
-
-// Recent calls
-$query = "SELECT c.*, u.nome as professor_nome FROM chamadas c 
-          LEFT JOIN usuarios u ON c.professor_id = u.id 
-          ORDER BY c.created_at DESC LIMIT 5";
-if(!isAdmin()) {
-    $query = "SELECT c.*, u.nome as professor_nome FROM chamadas c 
-              LEFT JOIN usuarios u ON c.professor_id = u.id 
-              WHERE c.professor_id = " . $_SESSION['user_id'] . "
-              ORDER BY c.created_at DESC LIMIT 5";
-}
-$stmt = $db->prepare($query);
-$stmt->execute();
-$recent_calls = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 
+
 <div class="card">
-    <h3>Bem-vindo ao Sistema de Chamadas</h3>
+    <h3>Bem-vindo(a) ao Sistema de Agendamento, <?php echo htmlspecialchars($_SESSION['user_name']); ?>!</h3>
     
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin: 30px 0;">
+    <?php if($error): ?>
+        <div class="alert alert-error">
+             <?php echo htmlspecialchars($error); ?>
+        </div>
+    <?php endif; ?>
+    
+    <div class="stats-grid">
         <?php if(isAdmin()): ?>
-            <div style="background: #e3f2fd; padding: 20px; border-radius: 8px; text-align: center;">
-                <h4 style="color: #1976d2; margin-bottom: 10px;">Professores</h4>
-                <div style="font-size: 32px; font-weight: bold; color: #1976d2;"><?php echo $stats['professores']; ?></div>
+            <div class="stat-card">
+                <h4>Professores Ativos</h4>
+                <div class="stat-number"><?php echo $stats['professores']; ?></div>
             </div>
-            <div style="background: #f3e5f5; padding: 20px; border-radius: 8px; text-align: center;">
-                <h4 style="color: #7b1fa2; margin-bottom: 10px;">Alunos</h4>
-                <div style="font-size: 32px; font-weight: bold; color: #7b1fa2;"><?php echo $stats['alunos']; ?></div>
+            <div class="stat-card">
+                <h4>Alunos Ativos</h4>
+                <div class="stat-number"><?php echo $stats['alunos']; ?></div>
             </div>
         <?php endif; ?>
-        <div style="background: #e8f5e8; padding: 20px; border-radius: 8px; text-align: center;">
-            <h4 style="color: #388e3c; margin-bottom: 10px;">Chamadas Hoje</h4>
-            <div style="font-size: 32px; font-weight: bold; color: #388e3c;"><?php echo $stats['chamadas_hoje']; ?></div>
-        </div>
+
+        <?php if(isAdmin() || isProfessor()): ?>
+            <div class="stat-card">
+                <h4>Aulas Hoje</h4>
+                <div class="stat-number"><?php echo $stats['aulas_hoje']; ?></div>
+            </div>
+        <?php endif; ?>
     </div>
 </div>
 
 <div class="card">
-    <h3>Chamadas Recentes</h3>
+    <h3>Últimas Aulas Agendadas</h3>
     
     <?php if(empty($recent_calls)): ?>
-        <p>Nenhuma chamada encontrada.</p>
+        <div class="alert alert-info">
+            <p>Nenhuma aula recente encontrada.</p>
+        </div>
     <?php else: ?>
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Data</th>
-                    <th>Turma</th>
-                    <th>Disciplina</th>
-                    <?php if(isAdmin()): ?>
-                        <th>Professor</th>
-                    <?php endif; ?>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach($recent_calls as $call): ?>
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
                     <tr>
-                        <td><?php echo date('d/m/Y', strtotime($call['data_chamada'])); ?></td>
-                        <td><?php echo htmlspecialchars($call['turma']); ?></td>
-                        <td><?php echo htmlspecialchars($call['disciplina']); ?></td>
-                        <?php if(isAdmin()): ?>
-                            <td><?php echo htmlspecialchars($call['professor_nome']); ?></td>
-                        <?php endif; ?>
+                        <th>Data e Hora</th>
+                        <?php if(!isAluno()): ?><th>Aluno</th><?php endif; ?>
+                        <th>Disciplina</th>
+                        <th>Status</th>
+                        <?php if(!isProfessor()): ?><th>Professor</th><?php endif; ?>
                     </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    <?php foreach($recent_calls as $aula): ?>
+                        <tr>
+                            <td><?php echo date('d/m/Y H:i', strtotime($aula['data_aula'] . ' ' . $aula['horario_inicio'])); ?></td>
+                            
+                            <?php if(!isAluno()): ?>
+                                <td><?php echo htmlspecialchars($aula['aluno_nome'] ?? 'N/A'); ?></td>
+                            <?php endif; ?>
+
+                            <td><?php echo htmlspecialchars($aula['disciplina'] ?? 'N/A'); ?></td>
+                            <td>
+                                <span class="status-badge status-<?php echo $aula['status'] ?? 'agendado'; ?>">
+                                    <?php echo ucfirst($aula['status'] ?? 'agendado'); ?>
+                                </span>
+                            </td>
+
+                            <?php if(!isProfessor()): ?>
+                                <td><?php echo htmlspecialchars($aula['professor_nome'] ?? 'N/A'); ?></td>
+                            <?php endif; ?>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
     <?php endif; ?>
 </div>
+
+<style>
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin: 30px 0;
+}
+.stat-card {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+    border: 1px solid #dee2e6;
+}
+.stat-card h4 {
+    color: #495057;
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 16px;
+}
+.stat-card .stat-number {
+    font-size: 36px;
+    font-weight: bold;
+    color: #343a40;
+}
+</style>
