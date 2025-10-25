@@ -172,7 +172,7 @@ document.addEventListener('DOMContentLoaded', function() {
             $('#tabela_gerenciamento_solicitacao1').DataTable({
                 "language": {
                     // Arquivo de tradução oficial do DataTables para PT-BR
-                    "url": "//cdn.datatables.net/plug-ins/2.0.8/i18n/pt-BR.json" 
+                    "url": "https://cdn.datatables.net/plug-ins/2.0.8/i18n/pt-BR.json" 
             
             
                 }
@@ -196,7 +196,7 @@ document.addEventListener('DOMContentLoaded', function() {
             $('#tabela_gerenciamento_solicitacao2').DataTable({
                 "language": {
                     // Arquivo de tradução oficial do DataTables para PT-BR
-                    "url": "https://cdn.datatables.net/plug-ins/2.0.8/i18n/pt-BR.json" 
+                    "url": "https://cdn.datatables.net/plug-ins/2.0.8/i18n/pt-BR.json"
             
             
                 }

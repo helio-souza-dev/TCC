@@ -23,18 +23,26 @@ try {
             LEFT JOIN professores p ON aa.professor_id = p.id
             LEFT JOIN usuarios u_prof ON p.usuario_id = u_prof.id";
 
-    // --- PASSO 2: Adicionar filtros (WHERE) dinamicamente ---
-    $where_clauses = []; // Array para guardar as condições (ex: status = 'agendado')
-    $params = [];        // Array para guardar os valores que irão nos '?'
-    
-    // Pega o status da URL, se não houver, o padrão é 'todos'.
-    $status_filter = $_GET['status'] ?? 'todos';
 
-    // Se o filtro não for 'todos', adiciona a condição na consulta.
-    if ($status_filter !== 'todos') {
-        $where_clauses[] = "aa.status = ?";
-        $params[] = $status_filter;
-    }
+    // --- PASSO 2: Adicionar filtros (WHERE) dinamicamente ---
+$where_clauses = []; // Array para guardar as condições
+$params = [];        // Array para guardar os valores
+
+// Pega o status da URL, se não houver, o padrão é 'todos'.
+$status_filter = $_GET['status'] ?? 'todos';
+
+// --- MUDANÇA APLICADA AQUI ---
+// Adicionamos a lógica para o novo filtro 'hoje'.
+if ($status_filter === 'hoje') {
+    // Se o filtro for 'hoje', buscamos pela data atual.
+    $where_clauses[] = "aa.data_aula = ?";
+    $params[] = date('Y-m-d'); // Pega a data de hoje no formato do banco
+} elseif ($status_filter !== 'todos') {
+    // Se for qualquer outro filtro (exceto 'todos'), filtra pelo status.
+    $where_clauses[] = "aa.status = ?";
+    $params[] = $status_filter;
+}
+// Se o filtro for 'todos', nenhuma cláusula de status/data é adicionada.
 
     // Adiciona um filtro dependendo do tipo de usuário.
     if (isProfessor()) {
@@ -89,7 +97,7 @@ try {
     <div class="flex justify-between align-center mb-20">
         <h3><?php echo isAluno() ? 'Minhas Aulas Agendadas' : 'Gerenciar Aulas e Frequência'; ?></h3>
         <?php if(isProfessor() || isAdmin()): ?>
-            <a href="dashboard.php?page=nova-chamada" class="btn">Agendar Nova Aula</a>
+            <a href="dashboard.php?page=nova-chamada" class="btn btn-primary">Agendar Nova Aula</a> 
         <?php endif; ?>
     </div>
     
@@ -104,11 +112,31 @@ try {
         <div class="mb-20">
             <label>Filtrar por status:</label>
             <div class="flex gap-10" style="margin-top: 10px;">
-                <a href="dashboard.php?page=chamadas&status=todos" class="btn <?php echo $status_filter === 'todos' ? '' : 'btn-outline'; ?>">Todos</a>
-                <a href="dashboard.php?page=chamadas&status=agendado" class="btn <?php echo $status_filter === 'agendado' ? '' : 'btn-outline'; ?>">Agendados</a>
-                <a href="dashboard.php?page=chamadas&status=realizado" class="btn <?php echo $status_filter === 'realizado' ? '' : 'btn-outline'; ?>">Realizados</a>
-                <a href="dashboard.php?page=chamadas&status=cancelado" class="btn <?php echo $status_filter === 'cancelado' ? '' : 'btn-outline'; ?>">Cancelados</a>
-            </div>
+                <a href="dashboard.php?page=chamadas&status=todos"
+   class="btn <?php echo $status_filter === 'todos' ? 'btn-primary' : 'btn-outline'; ?>">
+   Todos
+</a>
+
+<a href="dashboard.php?page=chamadas&status=hoje"
+        class="btn <?php echo $status_filter === 'hoje' ? 'btn-primary' : 'btn-outline'; ?>">
+        Aulas para Hoje
+     </a>
+
+                <a href="dashboard.php?page=chamadas&status=agendado"
+   class="btn <?php echo $status_filter === 'agendado' ? 'btn-primary' : 'btn-outline'; ?>">
+   Agendados
+</a>
+
+                <a href="dashboard.php?page=chamadas&status=realizado"
+   class="btn <?php echo $status_filter === 'realizado' ? 'btn-primary' : 'btn-outline'; ?>">
+   Realizados
+</a>
+
+                <a href="dashboard.php?page=chamadas&status=cancelado"
+   class="btn <?php echo $status_filter === 'cancelado' ? 'btn-primary' : 'btn-outline'; ?>">
+   Cancelados
+</a>
+    </div>
         </div>
         
         <?php if(empty($aulas)): ?>

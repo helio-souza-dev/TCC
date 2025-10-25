@@ -189,7 +189,7 @@ try {
         </div>
         
         <div class="flex gap-10 mt-20">
-            <button type="submit" class="btn">Agendar Aula</button>
+            <button type="submit" class="btn btn-primary">Agendar Aula</button>
             <a href="dashboard.php?page=chamadas" class="btn btn-outline">Voltar para Aulas</a>
         </div>
     </form>
