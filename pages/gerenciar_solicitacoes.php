@@ -65,7 +65,7 @@ $resolvidas = $resultado_resolvidas->fetch_all(MYSQLI_ASSOC);
         <div class="alert alert-info"><p>Nenhuma solicitação de alteração pendente.</p></div>
     <?php else: ?>
         <div class="table-responsive">
-            <table class="table">
+            <table class="table" id="tabela_gerenciamento_solicitacao1">
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -133,8 +133,8 @@ $resolvidas = $resultado_resolvidas->fetch_all(MYSQLI_ASSOC);
     <?php if(empty($resolvidas)): ?>
         <div class="alert alert-info"><p>Nenhuma solicitação resolvida recentemente.</p></div>
     <?php else: ?>
-        <div class="table-responsive">
-            <table class="table">
+        <div class="table-responsive" id="">
+            <table class="table" id="tabela_gerenciamento_solicitacao2">
                 <thead>
                     <tr>
                         <th>Usuário</th>
@@ -162,3 +162,50 @@ $resolvidas = $resultado_resolvidas->fetch_all(MYSQLI_ASSOC);
         </div>
     <?php endif; ?>
 </div>
+
+<script>
+// NOVO SCRIPT PARA DATATABLES
+document.addEventListener('DOMContentLoaded', function() {
+    // Usamos o jQuery, que foi carregado no dashboard.php
+    if (typeof jQuery !== 'undefined') {
+        jQuery(document).ready(function($) {
+            $('#tabela_gerenciamento_solicitacao1').DataTable({
+                "language": {
+                    // Arquivo de tradução oficial do DataTables para PT-BR
+                    "url": "//cdn.datatables.net/plug-ins/2.0.8/i18n/pt-BR.json" 
+            
+            
+                }
+            });
+            
+        });
+        
+    }
+    
+});
+
+
+</script>
+
+<script>
+// NOVO SCRIPT PARA DATATABLES
+document.addEventListener('DOMContentLoaded', function() {
+    // Usamos o jQuery, que foi carregado no dashboard.php
+    if (typeof jQuery !== 'undefined') {
+        jQuery(document).ready(function($) {
+            $('#tabela_gerenciamento_solicitacao2').DataTable({
+                "language": {
+                    // Arquivo de tradução oficial do DataTables para PT-BR
+                    "url": "//cdn.datatables.net/plug-ins/2.0.8/i18n/pt-BR.json" 
+            
+            
+                }
+            });
+            
+        });
+        
+    }
+    
+});
+
+</script>

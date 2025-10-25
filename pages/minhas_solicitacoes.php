@@ -65,7 +65,7 @@ function getStatusClass($status) {
                         <th>Novo Valor Desejado</th>
                         <th>Status</th>
                         <th>Data da Resposta</th>
-                        <th>Resposta</th>
+
 
                     </tr>
                 </thead>
@@ -97,16 +97,15 @@ function getStatusClass($status) {
 
 
 <script>
-// NOVO SCRIPT PARA DATATABLES
 document.addEventListener('DOMContentLoaded', function() {
-    // Usamos o jQuery, que foi carregado no dashboard.php
     if (typeof jQuery !== 'undefined') {
         jQuery(document).ready(function($) {
             $('#minhas_solicitacoes').DataTable({
                 "language": {
-                    // Arquivo de tradução oficial do DataTables para PT-BR
                     "url": "//cdn.datatables.net/plug-ins/2.0.8/i18n/pt-BR.json" 
                 }
+                // As chaves 'dom' e 'buttons' foram removidas.
+                // Isso restaura o layout padrão (Busca, Paginação, etc.)
             });
         });
     }
