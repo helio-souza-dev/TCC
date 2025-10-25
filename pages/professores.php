@@ -333,7 +333,7 @@ document.addEventListener('DOMContentLoaded', function() {
             $('#tabelaProfessores').DataTable({
                 "language": {
                     // Arquivo de tradução oficial do DataTables para PT-BR
-                    "url": "//cdn.datatables.net/plug-ins/2.0.8/i18n/pt-BR.json" 
+                    "url": "https://cdn.datatables.net/plug-ins/2.0.8/i18n/pt-BR.json" 
                 }
             });
         });

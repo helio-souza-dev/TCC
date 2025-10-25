@@ -565,110 +565,105 @@ table.dataTable tbody tr:hover {
   margin-right: 10px;
 }
 
-/* =================================================================
-   ESTILIZAÇÃO DATATABLES (PADRONIZADO COM O TEMA)
-   ================================================================= */
-
-/* --- Label "Buscar:" --- */
-.dt-search label {
-  /* Reutiliza o estilo .form-group label */
-  font-weight: 600;
-  color: #495057;
-  font-size: 13px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  display: flex;
-  align-items: center;
+/* =====================================================================
+   FORÇAR ESTILO DOS BOTÕES DO DATATABLES (EXPORTAÇÃO + AÇÕES)
+   ===================================================================== */
+.dataTables_wrapper .dt-buttons button.dt-button,
+.dataTables_wrapper .dt-buttons .btn,
+button.dt-button {
+    background: #ffffff !important;
+    border: 2px solid #000 !important;
+    color: #000 !important;
+    border-radius: 6px !important;
+    padding: 8px 18px !important;
+    font-weight: 600 !important;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: 0.2s !important;
 }
 
-/* --- Campo de Busca (Input) --- */
-.dt-search input {
-  /* Reutiliza o estilo .form-group input */
-  padding: 12px 16px !important;
-  border: 2px solid #e9ecef !important;
-  border-radius: 6px !important;
-  font-size: 16px !important;
-  transition: all 0.3s ease;
-  background: #ffffff !important;
-  color: #1a1a1a !important;
-  margin-left: 10px; /* Ajuste de espaço */
-  width: auto; /* Permite que o DataTables defina a largura */
+.dataTables_wrapper .dt-buttons button.dt-button:hover,
+.dataTables_wrapper .dt-buttons .btn:hover,
+button.dt-button:hover {
+    background: #000 !important;
+    color: #fff !important;
 }
 
-/* --- Foco do Campo de Busca --- */
-.dt-search input:focus {
-  /* Reutiliza o estilo :focus do seu input */
-  outline: none !important;
-  border-color: #1a1a1a !important;
-  box-shadow: 0 0 0 4px rgba(26, 26, 26, 0.1) !important;
+/* =====================================================================
+   PAGINAÇÃO – BOTÕES
+   ===================================================================== */
+.dataTables_wrapper .dataTables_paginate .paginate_button {
+    background: #ffffff !important;
+    border: 2px solid #000 !important;
+    color: #000 !important;
+    border-radius: 6px !important;
+    padding: 6px 12px !important;
+    margin: 2px !important;
+    cursor: pointer !important;
+    transition: 0.2s ease-in-out !important;
 }
 
-/* --- Botões de Paginação ("Anterior", "1", "2", "Próximo") --- */
-.dt-paging-button {
-  /* Usa o padding do .btn-sm */
-  padding: 8px 16px !important;
-  font-size: 14px !important;
-  margin: 0 3px !important;
-  border-radius: 6px !important; /* Raio do .btn */
-  transition: all 0.2s ease-in-out !important;
-  box-shadow: none !important;
-  background-image: none !important;
-
-  /* Estado Padrão: Sutil (Branco com borda clara) */
-  background: #ffffff !important;
-  color: #495057 !important;
-  border: 2px solid #e9ecef !important; /* Borda clara dos inputs */
-  cursor: pointer;
+.dataTables_wrapper .dataTables_paginate .paginate_button:hover {
+    background: #000 !important;
+    color: #fff !important;
+    border-color: #000 !important;
 }
 
-/* --- Hover (Padrão): Fica parecido com .btn-outline --- */
-.dt-paging-button:hover {
-  background: #f8f9fa !important; /* Cor de fundo do body */
-  color: #1a1a1a !important;
-  border-color: #1a1a1a !important; /* Borda preta no hover */
+/* =====================================================================
+   PAGINAÇÃO – ATIVO (SELECIONADO)
+   ===================================================================== */
+.dataTables_wrapper .dataTables_paginate .paginate_button.current,
+.dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
+    background: #000 !important;
+    color: #fff !important;
+    border-color: #000 !important;
+    font-weight: 700 !important;
 }
 
-/* --- Botão Ativo (Página Atual): Usa o estilo .btn-primary --- */
-.dt-paging-button.current,
-.dt-paging-button.current:hover {
-  background: linear-gradient(to top, #1a1a1a, #3c3c3c) !important;
-  color: #ffffff !important;
-  border-color: #1a1a1a !important;
-  font-weight: 600 !important; /* from .btn-primary */
+/* =====================================================================
+   PAGINAÇÃO – DESABILITADO
+   ===================================================================== */
+.dataTables_wrapper .dataTables_paginate .paginate_button.disabled,
+.dataTables_wrapper .dataTables_paginate .paginate_button.disabled:hover {
+    background: #e9ecef !important;
+    border-color: #ced4da !important;
+    color: #adb5bd !important;
+    cursor: not-allowed !important;
 }
 
-/* --- Botões Desabilitados ("Anterior" na pág 1) --- */
-.dt-paging-button.disabled,
-.dt-paging-button.disabled:hover {
-  background: #f8f9fa !important; /* Fundo cinza claro */
-  color: #adb5bd !important; /* Cor de texto padrão de radio/checkbox */
-  border-color: #e9ecef !important; /* Borda clara */
-  cursor: default;
+/* Força os botões do DataTables buttons a seguirem o tema preto e branco */
+.dataTables_wrapper .dt-buttons .dt-button,
+button.dt-button,
+a.dt-button {
+    background: #ffffff !important;
+    color: #000000 !important; /* COR PRETA NO TEXTO */
+    border: 2px solid #000000 !important;
+    font-weight: 600 !important;
+    border-radius: 6px !important;
+    padding: 8px 18px !important;
+    transition: all 0.2s ease-in-out !important;
+    text-transform: uppercase;
 }
 
-/* --- Texto "Mostrando de X a Y..." (Info) --- */
-.dt-info {
-  color: #6c757d; /* Cor .form-group small */
-  font-size: 14px;
-  padding-top: 8px !important;
+/* Hover dos botões (inverte as cores) */
+.dataTables_wrapper .dt-buttons .dt-button:hover,
+button.dt-button:hover,
+a.dt-button:hover {
+    background: #000000 !important;
+    color: #ffffff !important;
+}
+/* Correção do botão .btn-info para seguir o tema preto e branco */
+.btn-info {
+    background: #ffffff !important;
+    border: 2px solid #000000 !important;
+    color: #000000 !important;
+    font-weight: 600 !important;
+    border-radius: 6px !important;
+    cursor: pointer;
+    transition: 0.2s ease-in-out;
 }
 
-/* --- Dropdown "Mostrar X entradas" (Length) --- */
-.dt-length select {
-  /* Reutiliza o estilo .form-group select */
-  padding: 8px 12px !important;
-  border: 2px solid #e9ecef !important;
-  border-radius: 6px !important;
-  background-color: #ffffff !important;
-  color: #1a1a1a !important;
-  margin: 0 5px;
-}
-
-.dt-length label {
-  /* Reutiliza o estilo .form-group label */
-  font-weight: 600;
-  color: #495057;
-  font-size: 13px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+.btn-info:hover {
+    background: #000000 !important;
+    color: #ffffff !important;
 }

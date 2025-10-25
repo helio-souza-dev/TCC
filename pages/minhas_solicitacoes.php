@@ -102,7 +102,7 @@ document.addEventListener('DOMContentLoaded', function() {
         jQuery(document).ready(function($) {
             $('#minhas_solicitacoes').DataTable({
                 "language": {
-                    "url": "//cdn.datatables.net/plug-ins/2.0.8/i18n/pt-BR.json" 
+                    "url": "https://cdn.datatables.net/plug-ins/2.0.8/i18n/pt-BR.json" 
                 }
                 // As chaves 'dom' e 'buttons' foram removidas.
                 // Isso restaura o layout padrão (Busca, Paginação, etc.)
