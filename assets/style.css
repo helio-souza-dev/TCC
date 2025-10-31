@@ -1,6 +1,65 @@
 /* =================================================================
-   ARQUIVO DE ESTILO GLOBAL - TEMA PROFISSIONAL PRETO E BRANCO
+   ARQUIVO DE ESTILO GLOBAL - TEMA AZUL/ROXO (BASEADO EM v_azul.css)
    ================================================================= */
+
+:root {
+  /* Paleta de cores extraída de v_azul.css */
+  --color-black: #000000;
+  --color-purple: #8b7cc8;
+  --color-purple-light: #a594d1;
+  --color-purple-dark: #6b5b95;
+  --color-dark-blue: #4a6fa5;
+  --color-dark-blue-light: #5a7fb5;
+  --color-white: #ffffff;
+  --color-gray-light-text: #f8f9fa;
+  --color-gray-medium: #8c9196;
+  --color-gray-dark-bg: #495057; /* Fundo de input */
+  --color-border-light: #dee2e6;
+  --color-success: #28a745;
+  --color-danger: #dc3545;
+  --color-warning: #ffc107;
+
+  /* Variáveis semânticas para o tema */
+  --theme-body-bg: linear-gradient(
+    rgba(0, 0, 0, 0.75),
+    rgba(0, 0, 0, 0.9)
+  ); /* Fundo do BODY (de v_azul.css) */
+  --theme-dashboard-bg: linear-gradient(
+    135deg,
+    #1a1a2e 0%,
+    #16213e 50%,
+    #0f3460 100%
+  ); /* Fundo do DASHBOARD (de v_azul.css) */
+  --theme-card-bg: linear-gradient(
+    135deg,
+    rgba(42, 42, 42, 0.9) 0%,
+    rgba(26, 26, 46, 0.9) 100%
+  );
+  --theme-header-bg: linear-gradient(
+    135deg,
+    rgba(42, 42, 42, 0.95) 0%,
+    rgba(26, 26, 46, 0.95) 100%
+  );
+  --theme-input-bg: var(--color-gray-dark-bg);
+
+  --theme-text-primary: var(--color-white);
+  --theme-text-secondary: var(--color-gray-light-text);
+  --theme-text-label: var(--color-purple-light);
+  --theme-text-muted: var(--color-gray-medium);
+
+  --theme-primary-gradient: linear-gradient(
+    135deg,
+    var(--color-purple) 0%,
+    var(--color-dark-blue) 100%
+  );
+  --theme-primary-color: var(--color-purple);
+  --theme-secondary-color: var(--color-dark-blue);
+
+  --theme-border-color: rgba(139, 124, 200, 0.3);
+  --theme-border-color-strong: var(--color-purple);
+  --theme-border-focus: var(--color-dark-blue);
+  --theme-focus-shadow: rgba(74, 111, 165, 0.3);
+}
 
 /* --- Reset Básico e Configurações Gerais --- */
 * {
@@ -11,9 +70,12 @@
 
 body {
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  background: #f8f9fa; /* Um cinza muito claro para o fundo */
+  background: var(
+    --theme-body-bg
+  ); /* Fundo GRADIENTE ESCURO (para login, etc) */
+  background-attachment: fixed; /* Para o gradiente não rolar */
   min-height: 100vh;
-  color: #1a1a1a;
+  color: var(--theme-text-primary); /* Texto branco */
   line-height: 1.6;
 }
 
@@ -37,7 +99,6 @@ body {
   flex: 1;
 }
 
-/* Adicionado para suportar elementos de largura total dentro de um form-row */
 .form-group.full-width {
   flex-basis: 100%;
 }
@@ -45,19 +106,20 @@ body {
 .form-section {
   margin-bottom: 30px;
   padding: 25px;
-  background-image: linear-gradient(to right, #f8f9fa, #ffffff);
+  background: var(--theme-card-bg); /* Fundo de card de v_azul */
   border-radius: 8px;
-  border-left: 4px solid #1a1a1a;
-  border: 1px solid #e9ecef;
+  border-left: 4px solid var(--theme-primary-color); /* Borda roxa */
+  border: 1px solid var(--theme-border-color);
+  backdrop-filter: blur(10px);
 }
 
 .form-section h4 {
   margin-bottom: 20px;
-  color: #1a1a1a;
+  color: var(--theme-text-primary); /* Texto branco */
   font-size: 16px;
   font-weight: 600;
   padding-bottom: 10px;
-  border-bottom: 1px solid #e9ecef;
+  border-bottom: 1px solid var(--theme-border-color); /* Borda roxa fraca */
 }
 
 .form-group {
@@ -68,7 +130,7 @@ body {
   display: block;
   margin-bottom: 10px;
   font-weight: 600;
-  color: #495057;
+  color: var(--theme-text-label); /* Texto roxo claro */
   font-size: 13px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -83,12 +145,12 @@ body {
 .form-group textarea {
   width: 100%;
   padding: 12px 16px;
-  border: 2px solid #e9ecef;
+  border: 2px solid var(--theme-border-color-strong); /* Borda roxa */
   border-radius: 6px;
   font-size: 16px;
   transition: all 0.3s ease;
-  background: #ffffff;
-  color: #1a1a1a;
+  background: var(--theme-input-bg); /* Fundo cinza escuro */
+  color: var(--theme-text-primary); /* Texto branco */
 }
 .form-group textarea {
   resize: vertical;
@@ -99,16 +161,17 @@ body {
 .form-group select:focus,
 .form-group textarea:focus {
   outline: none;
-  border-color: #1a1a1a;
-  box-shadow: 0 0 0 4px rgba(26, 26, 26, 0.1);
+  border-color: var(--theme-border-focus); /* Borda azul escura */
+  box-shadow: 0 0 0 4px var(--theme-focus-shadow); /* Sombra azul */
 }
 
 .form-group small {
   display: block;
   margin-top: 5px;
-  color: #6c757d;
+  color: var(--theme-text-muted); /* Cinza médio */
   font-size: 12px;
 }
+
 /* Estilos para Radio e Checkbox personalizados */
 .radio-group,
 .checkbox-group {
@@ -126,6 +189,7 @@ body {
   font-weight: 500;
   text-transform: none;
   letter-spacing: 0;
+  color: var(--theme-text-secondary); /* Texto cinza claro */
 }
 .radio-group input[type="radio"],
 .checkbox-group input[type="checkbox"] {
@@ -139,19 +203,20 @@ body {
   display: inline-block;
   width: 20px;
   height: 20px;
-  border: 2px solid #adb5bd;
+  border: 2px solid var(--theme-border-color-strong); /* Borda roxa */
   border-radius: 50%;
   margin-right: 10px;
   transition: all 0.2s ease;
   position: relative;
+  background: var(--theme-input-bg);
 }
 .checkbox-group label .custom-checkbox {
   border-radius: 4px; /* Mantém o checkbox quadrado */
 }
 .radio-group input:checked + .custom-radio,
 .checkbox-group input:checked + .custom-checkbox {
-  border-color: #1a1a1a;
-  background-color: #1a1a1a;
+  border-color: var(--theme-primary-color);
+  background-color: var(--theme-primary-color); /* Fundo roxo */
 }
 .radio-group input:checked + .custom-radio::after {
   content: "";
@@ -162,17 +227,15 @@ body {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #ffffff;
+  background: var(--color-white); /* Miolo branco */
 }
-
-/* Desenha o checkmark (✓) para o checkbox */
 .checkbox-group input:checked + .custom-checkbox::after {
   content: "✔";
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  color: #ffffff;
+  color: var(--color-white); /* Checkmark branco */
   font-size: 12px;
 }
 
@@ -194,21 +257,25 @@ body {
   overflow: hidden;
 }
 
-/* Refatorado: .btn-primary agora é separado do .btn */
 .btn-primary {
-  background-image: linear-gradient(to top, #1a1a1a, #3c3c3c);
-  color: #ffffff;
+  background: var(--theme-primary-gradient); /* Gradiente roxo/azul */
+  color: var(--theme-text-primary);
   padding: 14px 28px;
   border-radius: 8px;
   font-weight: 600;
 }
 
-/* Efeito de hover principal (sombra/levantar) aplicado a todos os botões */
 .btn-primary:hover,
 .btn:hover {
-  background-image: linear-gradient(to top, #2c2c2c, #4c4c4c);
   transform: translateY(-3px);
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 5px 15px rgba(107, 70, 193, 0.4); /* Sombra roxa de v_azul */
+}
+.btn-primary:hover {
+  background: linear-gradient(
+    135deg,
+    var(--color-purple-dark) 0%,
+    var(--color-dark-blue-light) 100%
+  );
 }
 
 .btn:active {
@@ -217,11 +284,19 @@ body {
 }
 
 .btn-secondary {
-  background-image: linear-gradient(to top, #6c757d, #868e96);
-  color: #ffffff;
+  background-image: linear-gradient(
+    135deg,
+    var(--color-purple-dark) 0%,
+    var(--color-gray-dark-bg) 100%
+  );
+  color: var(--theme-text-primary);
 }
 .btn-secondary:hover {
-  background-image: linear-gradient(to top, #5a6268, #7a8288);
+  background-image: linear-gradient(
+    135deg,
+    var(--color-purple-dark) 0%,
+    var(--color-gray-medium) 100%
+  );
 }
 
 .btn-danger {
@@ -242,12 +317,12 @@ body {
 
 .btn-outline {
   background: transparent;
-  color: #1a1a1a;
-  border: 2px solid #1a1a1a;
+  color: var(--theme-primary-color); /* Roxo */
+  border: 2px solid var(--theme-primary-color); /* Roxo */
 }
 .btn-outline:hover {
-  background: #1a1a1a;
-  color: #ffffff;
+  background: var(--theme-primary-color); /* Roxo */
+  color: var(--theme-text-primary);
 }
 .btn-sm {
   padding: 8px 16px;
@@ -267,32 +342,36 @@ body {
   padding: 20px;
 }
 .login-form {
-  background: #ffffff;
+  background: var(--theme-input-bg); /* Fundo cinza escuro */
   padding: 40px;
   border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 15px 35px rgba(107, 70, 193, 0.5); /* Sombra roxa */
   width: 100%;
   max-width: 400px;
-  border: 1px solid #e9ecef;
+  border: 1px solid var(--theme-border-color-strong); /* Borda roxa */
+  backdrop-filter: blur(6px);
 }
 .login-form h2 {
   text-align: center;
   margin-bottom: 30px;
-  color: #1a1a1a;
+  color: var(--theme-secondary-color); /* Azul escuro */
   font-size: 28px;
   font-weight: 600;
 }
 
 /* Dashboard Styles */
 .dashboard {
-  background: #ffffff;
+  background: var(
+    --theme-dashboard-bg
+  ); /* Fundo GRADIENTE AZUL/ROXO (para páginas internas) */
   min-height: 100vh;
 }
 .header {
-  background: #1a1a1a;
-  color: #ffffff;
+  background: var(--theme-header-bg); /* Fundo de header de v_azul */
+  color: var(--theme-text-primary);
   padding: 20px 0;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 20px rgba(139, 124, 200, 0.3); /* Sombra roxa */
+  backdrop-filter: blur(10px);
 }
 .header-content {
   display: flex;
@@ -311,32 +390,38 @@ body {
   align-items: center;
   gap: 20px;
   font-size: 14px;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 8px 16px;
+  border-radius: 25px;
 }
 .nav-menu {
-  background: #ffffff;
-  padding: 20px 0;
-  border-bottom: 1px solid #e9ecef;
+  background: var(--theme-header-bg); /* Fundo de header de v_azul */
+  padding: 0;
+  border-bottom: 1px solid var(--theme-border-color); /* Borda roxa fraca */
+  backdrop-filter: blur(10px);
 }
 .nav-menu ul {
   list-style: none;
   display: flex;
-  gap: 30px;
+  gap: 0;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 0;
+  justify-content: center;
 }
 .nav-menu a {
   text-decoration: none;
-  color: #495057;
+  color: var(--theme-text-secondary); /* Cinza claro */
   font-weight: 500;
-  padding: 10px 16px;
-  border-radius: 6px;
+  padding: 18px 30px;
+  border-radius: 0;
   transition: all 0.3s ease;
+  display: block;
 }
 .nav-menu a:hover,
 .nav-menu a.active {
-  background: #1a1a1a;
-  color: #ffffff;
+  background: var(--theme-primary-gradient); /* Gradiente roxo/azul */
+  color: var(--theme-text-primary);
 }
 .main-content {
   padding: 30px 20px;
@@ -344,18 +429,19 @@ body {
   margin: 0 auto;
 }
 .card {
-  background: #ffffff;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  background: var(--theme-card-bg); /* Fundo de card de v_azul */
+  border-radius: 15px;
+  box-shadow: 0 8px 25px rgba(139, 124, 200, 0.2); /* Sombra roxa */
   padding: 30px;
   margin-bottom: 30px;
-  border: 1px solid #e9ecef;
+  border: 1px solid var(--theme-border-color);
+  backdrop-filter: blur(10px);
 }
 .card h3 {
   margin-top: 0;
   margin-bottom: 25px;
-  color: #1a1a1a;
-  border-bottom: 2px solid #1a1a1a;
+  color: var(--theme-text-primary); /* Texto branco */
+  border-bottom: 2px solid var(--theme-text-label); /* Borda roxa clara */
   padding-bottom: 15px;
   font-weight: 700;
   font-size: 20px;
@@ -370,16 +456,18 @@ body {
   width: 100%;
   border-collapse: collapse;
   margin-top: 20px;
+  border-radius: 10px;
+  overflow: hidden;
 }
 .table th,
 .table td {
   padding: 12px 16px;
   text-align: left;
-  border-bottom: 1px solid #e9ecef;
+  border-bottom: 1px solid var(--theme-border-color); /* Borda roxa fraca */
 }
 .table th {
-  background: #1a1a1a;
-  color: #ffffff;
+  background: var(--theme-secondary-color); /* Azul escuro */
+  color: var(--theme-text-primary);
   font-weight: 600;
   font-size: 14px;
   padding: 16px;
@@ -387,9 +475,11 @@ body {
 .table td {
   padding: 16px;
   vertical-align: middle;
+  color: var(--theme-text-secondary); /* Cinza claro */
+  background: rgba(42, 42, 42, 0.5); /* Fundo de célula de v_azul */
 }
 .table tbody tr:hover {
-  background: #f8f9fa;
+  background: rgba(139, 124, 200, 0.2); /* Hover roxo de v_azul */
   transform: scale(1.01);
   transition: all 0.2s ease;
 }
@@ -401,21 +491,34 @@ body {
   margin-bottom: 20px;
   font-weight: 500;
   border-left: 4px solid;
+  backdrop-filter: blur(5px);
 }
 .alert-success {
-  background: #d4edda;
-  color: #155724;
-  border-left-color: #28a745;
+  background: linear-gradient(
+    135deg,
+    rgba(40, 167, 69, 0.2) 0%,
+    rgba(40, 167, 69, 0.1) 100%
+  );
+  color: var(--theme-text-primary);
+  border-left-color: var(--color-success);
 }
 .alert-error {
-  background: #f8d7da;
-  color: #721c24;
-  border-left-color: #dc3545;
+  background: linear-gradient(
+    135deg,
+    rgba(220, 53, 69, 0.2) 0%,
+    rgba(220, 53, 69, 0.1) 100%
+  );
+  color: var(--theme-text-primary);
+  border-left-color: var(--color-danger);
 }
 .alert-info {
-  background: #d1ecf1;
-  color: #0c5460;
-  border: 1px solid #bee5eb;
+  background: linear-gradient(
+    135deg,
+    rgba(74, 111, 165, 0.2) 0%,
+    rgba(74, 111, 165, 0.1) 100%
+  );
+  color: var(--theme-text-primary);
+  border-left-color: var(--theme-secondary-color);
 }
 
 /* Status badges */
@@ -427,16 +530,16 @@ body {
   text-transform: uppercase;
 }
 .status-agendado {
-  background: #fff3cd;
-  color: #856404;
+  background: var(--color-warning);
+  color: #1a1a1a;
 }
 .status-realizado {
-  background: #d4edda;
-  color: #155724;
+  background: var(--color-success);
+  color: var(--color-white);
 }
 .status-cancelado {
-  background: #f8d7da;
-  color: #721c24;
+  background: var(--color-danger);
+  color: var(--color-white);
 }
 .status {
   padding: 6px 12px;
@@ -446,21 +549,19 @@ body {
   display: inline-block;
 }
 .status-active {
-  background: #d4edda;
-  color: #155724;
+  background: var(--color-success);
+  color: var(--color-white);
 }
 .status-inactive {
-  background: #f8d7da;
-  color: #721c24;
+  background: var(--color-danger);
+  color: var(--color-white);
 }
-
-/* Stats row - REMOVIDO (home.php usa estilo próprio) */
 
 /* Empty state */
 .empty-state {
   text-align: center;
   padding: 60px 20px;
-  color: #6c757d;
+  color: var(--theme-text-muted);
 }
 .empty-icon {
   font-size: 48px;
@@ -469,7 +570,7 @@ body {
 .empty-state p {
   font-size: 18px;
   margin-bottom: 10px;
-  color: #495057;
+  color: var(--theme-text-secondary);
 }
 .empty-state small {
   font-size: 14px;
@@ -513,7 +614,7 @@ body {
   }
   .nav-menu ul {
     flex-direction: column;
-    gap: 10px;
+    gap: 0;
   }
   .form-row {
     flex-direction: column;
@@ -529,84 +630,100 @@ body {
   .form-section {
     padding: 15px;
   }
-  
-  /* Estilos de modal/calendário removidos daqui */
 }
 
 /* =================================================================
-   SOBRESCRITAS DO DATATABLES (Mantidas)
+   SOBRESCRITAS DO DATATABLES (Tema Azul/Roxo Corrigido)
    ================================================================= */
 
-/* Força cabeçalho preto */
+/* Força cabeçalho azul (do tema) */
 table.dataTable thead th {
-  background: #1a1a1a !important;
-  color: #ffffff !important;
+  background: var(--theme-secondary-color) !important; /* Azul escuro */
+  color: var(--theme-text-primary) !important;
   border-bottom: none !important;
 }
 
-/* Ajusta as linhas como seu estilo original */
+/* Ajusta as linhas (texto e fundo) */
 table.dataTable tbody td {
-  border-bottom: 1px solid #e9ecef !important;
+  border-bottom: 1px solid var(--theme-border-color) !important;
+  color: var(--theme-text-secondary) !important; /* Texto cinza claro */
+  background: rgba(42, 42, 42, 0.5) !important; /* Fundo de célula escuro */
 }
 
-/* Hover visual customizado */
+/* Hover visual roxo (do tema) */
+table.dataTable tbody tr:hover td,
 table.dataTable tbody tr:hover {
-  background: #f8f9fa !important;
+  background: rgba(139, 124, 200, 0.2) !important; /* Roxo transparente */
   transform: scale(1.01);
 }
 
-/* Espaçamento e layout */
+/* Textos do Wrapper (Showing entries, Search, etc) */
 .dataTables_wrapper {
   margin-top: 20px;
+  color: var(--theme-text-secondary) !important;
+}
+.dataTables_wrapper label,
+.dataTables_wrapper .dataTables_info {
+  color: var(--theme-text-secondary) !important;
 }
 
-/* Botões alinhados ao seu tema */
+/* Dropdown "Show entries" */
+.dataTables_wrapper select {
+  background: var(--theme-input-bg) !important;
+  color: var(--theme-text-primary) !important;
+  border: 1px solid var(--theme-border-color-strong) !important;
+  border-radius: 4px;
+}
+
 .dataTables_wrapper .dt-buttons .btn {
   margin-right: 10px;
 }
 
 /* =====================================================================
-   FORÇAR ESTILO DOS BOTÕES DO DATATABLES (EXPORTAÇÃO + AÇÕES)
+   BOTÕES DO DATATABLES (Exportação, etc.)
    ===================================================================== */
 .dataTables_wrapper .dt-buttons button.dt-button,
 .dataTables_wrapper .dt-buttons .btn,
 button.dt-button {
-    background: #ffffff !important;
-    border: 2px solid #000 !important;
-    color: #000 !important;
-    border-radius: 6px !important;
-    padding: 8px 18px !important;
-    font-weight: 600 !important;
-    text-transform: uppercase;
-    cursor: pointer;
-    transition: 0.2s !important;
+  background: var(--theme-primary-gradient) !important;
+  border: 2px solid var(--theme-primary-color) !important;
+  color: var(--theme-text-primary) !important;
+  border-radius: 6px !important;
+  padding: 8px 18px !important;
+  font-weight: 600 !important;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: 0.2s !important;
 }
 
 .dataTables_wrapper .dt-buttons button.dt-button:hover,
 .dataTables_wrapper .dt-buttons .btn:hover,
 button.dt-button:hover {
-    background: #000 !important;
-    color: #fff !important;
+  background: var(--theme-primary-color) !important;
+  color: var(--theme-text-primary) !important;
+  border-color: var(--theme-border-focus) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(139, 124, 200, 0.3);
 }
 
 /* =====================================================================
    PAGINAÇÃO – BOTÕES
    ===================================================================== */
 .dataTables_wrapper .dataTables_paginate .paginate_button {
-    background: #ffffff !important;
-    border: 2px solid #000 !important;
-    color: #000 !important;
-    border-radius: 6px !important;
-    padding: 6px 12px !important;
-    margin: 2px !important;
-    cursor: pointer !important;
-    transition: 0.2s ease-in-out !important;
+  background: transparent !important;
+  border: 2px solid var(--theme-border-color-strong) !important;
+  color: var(--theme-text-secondary) !important;
+  border-radius: 6px !important;
+  padding: 6px 12px !important;
+  margin: 2px !important;
+  cursor: pointer !important;
+  transition: 0.2s ease-in-out !important;
 }
 
 .dataTables_wrapper .dataTables_paginate .paginate_button:hover {
-    background: #000 !important;
-    color: #fff !important;
-    border-color: #000 !important;
+  background: var(--theme-primary-color) !important;
+  color: var(--theme-text-primary) !important;
+  border-color: var(--theme-primary-color) !important;
 }
 
 /* =====================================================================
@@ -614,10 +731,10 @@ button.dt-button:hover {
    ===================================================================== */
 .dataTables_wrapper .dataTables_paginate .paginate_button.current,
 .dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
-    background: #000 !important;
-    color: #fff !important;
-    border-color: #000 !important;
-    font-weight: 700 !important;
+  background: var(--theme-primary-gradient) !important;
+  color: var(--theme-text-primary) !important;
+  border-color: var(--theme-secondary-color) !important;
+  font-weight: 700 !important;
 }
 
 /* =====================================================================
@@ -625,45 +742,60 @@ button.dt-button:hover {
    ===================================================================== */
 .dataTables_wrapper .dataTables_paginate .paginate_button.disabled,
 .dataTables_wrapper .dataTables_paginate .paginate_button.disabled:hover {
-    background: #e9ecef !important;
-    border-color: #ced4da !important;
-    color: #adb5bd !important;
-    cursor: not-allowed !important;
+  background: var(--theme-input-bg) !important;
+  border-color: var(--theme-border-color) !important;
+  color: var(--theme-text-muted) !important;
+  cursor: not-allowed !important;
 }
 
-/* Força os botões do DataTables buttons a seguirem o tema preto e branco */
-.dataTables_wrapper .dt-buttons .dt-button,
-button.dt-button,
-a.dt-button {
-    background: #ffffff !important;
-    color: #000000 !important; /* COR PRETA NO TEXTO */
-    border: 2px solid #000000 !important;
-    font-weight: 600 !important;
-    border-radius: 6px !important;
-    padding: 8px 18px !important;
-    transition: all 0.2s ease-in-out !important;
-    text-transform: uppercase;
-}
-
-/* Hover dos botões (inverte as cores) */
-.dataTables_wrapper .dt-buttons .dt-button:hover,
-button.dt-button:hover,
-a.dt-button:hover {
-    background: #000000 !important;
-    color: #ffffff !important;
-}
-/* Correção do botão .btn-info para seguir o tema preto e branco */
+/* =====================================================================
+   BOTÃO .btn-info (Se estiver usando dentro da tabela)
+   ===================================================================== */
 .btn-info {
-    background: #ffffff !important;
-    border: 2px solid #000000 !important;
-    color: #000000 !important;
-    font-weight: 600 !important;
-    border-radius: 6px !important;
-    cursor: pointer;
-    transition: 0.2s ease-in-out;
+  background: transparent !important;
+  border: 2px solid var(--color-dark-blue) !important;
+  color: var(--color-dark-blue) !important;
+  font-weight: 600 !important;
+  border-radius: 6px !important;
+  cursor: pointer;
+  transition: 0.2s ease-in-out;
+  padding: 6px 12px;
+  text-decoration: none;
+  display: inline-block;
 }
 
 .btn-info:hover {
-    background: #000000 !important;
-    color: #ffffff !important;
+  background: var(--color-dark-blue) !important;
+  color: var(--color-white) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(74, 111, 165, 0.3);
+}
+/* =================================================================
+   CORREÇÃO BADGES DE STATUS (ATIVO/INATIVO)
+   ================================================================= */
+
+/* Define o "Ativo" como verde-escuro (da paleta v_azul) */
+.status-active {
+  background: var(--color-success) !important; /* Verde */
+  color: var(--color-white) !important;
+}
+
+/* Define o "Inativo" como vermelho-escuro (da paleta v_azul) */
+.status-inactive {
+  background: var(--color-danger) !important; /* Vermelho */
+  color: var(--color-white) !important;
+}
+
+/* Bônus: Corrige os outros status também para o tema escuro */
+.status-agendado {
+  background: var(--color-warning) !important; /* Amarelo */
+  color: #1a1a1a !important; /* Texto preto para ler no amarelo */
+}
+.status-realizado {
+  background: var(--color-success) !important; /* Verde */
+  color: var(--color-white) !important;
+}
+.status-cancelado {
+  background: var(--color-danger) !important; /* Vermelho */
+  color: var(--color-white) !important;
 }
