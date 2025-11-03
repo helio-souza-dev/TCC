@@ -706,47 +706,9 @@ button.dt-button:hover {
   box-shadow: 0 4px 10px rgba(139, 124, 200, 0.3);
 }
 
-/* =====================================================================
-   PAGINAÇÃO – BOTÕES
-   ===================================================================== */
-.dataTables_wrapper .dataTables_paginate .paginate_button {
-  background: transparent !important;
-  border: 2px solid var(--theme-border-color-strong) !important;
-  color: var(--theme-text-secondary) !important;
-  border-radius: 6px !important;
-  padding: 6px 12px !important;
-  margin: 2px !important;
-  cursor: pointer !important;
-  transition: 0.2s ease-in-out !important;
-}
 
-.dataTables_wrapper .dataTables_paginate .paginate_button:hover {
-  background: var(--theme-primary-color) !important;
-  color: var(--theme-text-primary) !important;
-  border-color: var(--theme-primary-color) !important;
-}
 
-/* =====================================================================
-   PAGINAÇÃO – ATIVO (SELECIONADO)
-   ===================================================================== */
-.dataTables_wrapper .dataTables_paginate .paginate_button.current,
-.dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
-  background: var(--theme-primary-gradient) !important;
-  color: var(--theme-text-primary) !important;
-  border-color: var(--theme-secondary-color) !important;
-  font-weight: 700 !important;
-}
 
-/* =====================================================================
-   PAGINAÇÃO – DESABILITADO
-   ===================================================================== */
-.dataTables_wrapper .dataTables_paginate .paginate_button.disabled,
-.dataTables_wrapper .dataTables_paginate .paginate_button.disabled:hover {
-  background: var(--theme-input-bg) !important;
-  border-color: var(--theme-border-color) !important;
-  color: var(--theme-text-muted) !important;
-  cursor: not-allowed !important;
-}
 
 /* =====================================================================
    BOTÃO .btn-info (Se estiver usando dentro da tabela)
@@ -799,3 +761,95 @@ button.dt-button:hover {
   background: var(--color-danger) !important; /* Vermelho */
   color: var(--color-white) !important;
 }
+
+/* ======== CORREÇÃO DOS BOTÕES DE PAGINAÇÃO DO DATATABLES ======== */
+.dataTables_wrapper .dataTables_paginate {
+    text-align: center;
+    margin-top: 15px;
+}
+
+.dataTables_wrapper .dataTables_paginate .dt-paging-button {
+    background: linear-gradient(135deg, var(--theme-primary), var(--theme-secondary));
+    color: #fff !important;
+    border: 1px solid var(--theme-border-color-strong);
+    border-radius: 8px;
+    padding: 6px 12px;
+    margin: 0 3px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+/* Hover */
+.dataTables_wrapper .dataTables_paginate .dt-paging-button:hover:not(.disabled):not(.current) {
+    background: linear-gradient(135deg, var(--theme-secondary), var(--theme-primary));
+    color: #fff !important;
+    transform: scale(1.05);
+}
+
+/* Botão ativo (página atual) */
+.dataTables_wrapper .dataTables_paginate .dt-paging-button.current {
+    background: linear-gradient(135deg, var(--theme-border-color-strong), var(--theme-primary));
+    color: #fff !important;
+    border: 1px solid var(--theme-border-color-strong);
+    transform: scale(1.08);
+}
+
+
+/* Botão desabilitado (ESPECIFICIDADE MÁXIMA - TODAS AS COMBINAÇÕES) */
+.dataTables_wrapper .dataTables_paginate .dt-paging-button.disabled.first,
+.dataTables_wrapper .dataTables_paginate .dt-paging-button.disabled.previous,
+.dataTables_wrapper .dataTables_paginate .dt-paging-button.disabled.next,
+.dataTables_wrapper .dataTables_paginate .dt-paging-button.disabled.last,
+.dataTables_wrapper .dt-paging .dt-paging-button.disabled.first,
+.dataTables_wrapper .dt-paging .dt-paging-button.disabled.previous,
+.dataTables_wrapper .dt-paging .dt-paging-button.disabled.next,
+.dataTables_wrapper .dt-paging .dt-paging-button.disabled.last,
+.dataTables_wrapper .dataTables_paginate .dt-paging-button.disabled,
+.dataTables_wrapper .dt-paging .dt-paging-button.disabled,
+.dataTables_wrapper .dataTables_paginate .paginate_button.disabled,
+.dataTables_wrapper .paginate_button.disabled,
+button.dt-paging-button.disabled,
+a.dt-paging-button.disabled,
+span.dt-paging-button.disabled,
+.dt-paging-button.disabled,
+.paginate_button.disabled {
+    background: #2a2a3e !important;
+    background-color: #2a2a3e !important;
+    background-image: none !important;
+    color: #a594d1 !important;
+    fill: #a594d1 !important;
+    border: 2px solid #6b5b95 !important;
+    border-color: #6b5b95 !important;
+    cursor: not-allowed !important;
+    transform: none !important;
+    opacity: 1 !important;
+    box-shadow: none !important;
+    -webkit-text-fill-color: #a594d1 !important;
+    text-decoration: none !important;
+}
+
+/* Forçar também no hover do desabilitado */
+.dataTables_wrapper .dataTables_paginate .dt-paging-button.disabled.first:hover,
+.dataTables_wrapper .dataTables_paginate .dt-paging-button.disabled.previous:hover,
+.dataTables_wrapper .dataTables_paginate .dt-paging-button.disabled.next:hover,
+.dataTables_wrapper .dataTables_paginate .dt-paging-button.disabled.last:hover,
+.dataTables_wrapper .dt-paging .dt-paging-button.disabled.first:hover,
+.dataTables_wrapper .dt-paging .dt-paging-button.disabled.previous:hover,
+.dataTables_wrapper .dt-paging .dt-paging-button.disabled.next:hover,
+.dataTables_wrapper .dt-paging .dt-paging-button.disabled.last:hover,
+.dataTables_wrapper .dataTables_paginate .dt-paging-button.disabled:hover,
+.dataTables_wrapper .dt-paging .dt-paging-button.disabled:hover,
+button.dt-paging-button.disabled:hover,
+a.dt-paging-button.disabled:hover,
+span.dt-paging-button.disabled:hover,
+.dt-paging-button.disabled:hover {
+    background: #2a2a3e !important;
+    background-color: #2a2a3e !important;
+    color: #a594d1 !important;
+    fill: #a594d1 !important;
+    border-color: #6b5b95 !important;
+    transform: none !important;
+    -webkit-text-fill-color: #a594d1 !important;
+}
+
