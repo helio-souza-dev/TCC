@@ -37,19 +37,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
 
     // --- AÇÃO: ADICIONAR NOVO ALUNO ---
-    if ($action === 'add') {
-        // Validações simples antes de ir para o banco.
+   if ($action === 'add') {
+        // 1. Validação de CPF
         if (empty($_POST['cpf']) || !validarCPF($_POST['cpf'])) {
             $error = "O CPF informado é inválido.";
+        // 2. Validação de Senha
         } elseif (empty($_POST['senha']) || strlen($_POST['senha']) < 8) {
             $error = "A senha é obrigatória e deve ter no mínimo 8 caracteres.";
+
+        // 3. Validação de Data de Nascimento (se estiver vazio)
+        } elseif (empty($_POST['data_nascimento'])) { // Validação de campo obrigatório
+            $error = "A Data de Nascimento é obrigatória.";
+            
         } else {
-            // Se as validações passaram, tenta inserir no banco.
+            
+            // --- VALIDAÇÃO DE IDADE MÍNIMA (4 ANOS) ---
+            $data_nascimento = $_POST['data_nascimento'];
+            $idade_minima = 4;
+        
+            try {
+                $data_nascimento_obj = new DateTime($data_nascimento);
+                $hoje = new DateTime();
+                $diferenca = $hoje->diff($data_nascimento_obj);
+                $idade = $diferenca->y; // Pega a idade em anos
+
+                if ($idade < $idade_minima) {
+                    $error = "O aluno deve ter no mínimo {$idade_minima} anos para ser cadastrado. Idade atual: {$idade} anos.";
+                }
+            } catch (Exception $e) {
+                $error = "Data de Nascimento inválida.";
+            }
+            // --- FIM DA VALIDAÇÃO DE IDADE MÍNIMA ---
+        }
+        
+        // Se as validações (incluindo a de idade) passaram, $error estará vazio.
+        if (empty($error)) { // Executa o cadastro APENAS se não houver erro
             
             // Inicia uma transação: ou tudo funciona, ou nada é salvo.
             // Isso evita que um usuário seja criado sem os dados de aluno.
             iniciar_transacao($conn);
-
+        
             try {
                 // 1. Criptografa a senha para guardar no banco de forma segura.
                 $hashedPassword = password_hash($_POST['senha'], PASSWORD_DEFAULT);
@@ -161,7 +188,7 @@ $alunos = $resultado->fetch_all(MYSQLI_ASSOC);
                 </div>
                 <div class="form-group">
                     <label for="rg">RG:</label>
-                    <input type="text" id="rg" name="rg" required value="<?php echo htmlspecialchars($_POST['rg'] ?? ''); ?>">
+                    <input type="text" id="rg" name="rg" maxlength="12" required value="<?php echo htmlspecialchars($_POST['rg'] ?? ''); ?>">
                 </div>
             </div>
 
@@ -336,7 +363,9 @@ $alunos = $resultado->fetch_all(MYSQLI_ASSOC);
     <?php endif; ?>
 </div>
 
-<script>
+<!-- idade -->
+
+<script> // verifica a idade do aluno
 document.addEventListener('DOMContentLoaded', function() {
     const dataNascimentoInput = document.getElementById('data_nascimento');
     const responsavelFields = document.getElementById('responsavel-fields');
@@ -388,7 +417,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const inputSenha = document.getElementById('senha');
 
     // 2. A sua função de gerar senha, "traduzida" para JavaScript
-    function gerarSenhaJS(tamanho = 12) {
+    function gerarSenhaJS(tamanho = 8) {
         const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
         const tamanhoStr = caracteres.length;
         let strAleatorio = '';
@@ -460,5 +489,15 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
+
+<!--adicionar caracteres especiais do RG-->
+
 <script>
-// ... (scripts existentes)
+document.getElementById('rg').addEventListener('input', function(e) {
+    let value = e.target.value.replace(/\D/g, '');
+  value = value.replace(/^(\d{2})(\d)/, '$1.$2');       // Adiciona o primeiro ponto
+  value = value.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3'); // Adiciona o segundo ponto
+  value = value.replace(/\.(\d{3})(\d)$/, '.$1-$2');    // Adiciona o hífen
+    e.target.value = value;
+});
+</script>

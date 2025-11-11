@@ -270,7 +270,7 @@ document.getElementById('cpf').addEventListener('input', function(e) {
     const inputSenha = document.getElementById('senha');
 
     // 2. A sua função de gerar senha, "traduzida" para JavaScript
-    function gerarSenhaJS(tamanho = 12) {
+    function gerarSenhaJS(tamanho = 8) {
         const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
         const tamanhoStr = caracteres.length;
         let strAleatorio = '';

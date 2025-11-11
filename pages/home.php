@@ -158,14 +158,14 @@ try {
     margin: 30px 0;
 }
 .stat-card {
-    background: #f8f9fa;
+    background: #495057;
     padding: 20px;
     border-radius: 8px;
     text-align: center;
     border: 1px solid #dee2e6;
 }
 .stat-card h4 {
-    color: #495057;
+    color: #f8f9fa;
     margin-top: 0;
     margin-bottom: 10px;
     font-size: 16px;
@@ -173,7 +173,7 @@ try {
 .stat-card .stat-number {
     font-size: 36px;
     font-weight: bold;
-    color: #343a40;
+    color: #f8f9fa;
 }
 </style>
 
