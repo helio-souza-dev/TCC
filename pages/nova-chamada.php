@@ -224,6 +224,45 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <script>
+    // Função pura de JS para formatar data (DD/MM/AAAA)
+    function formatarDataInput(event) {
+        let input = event.target;
+        // Remove tudo que não for dígito
+        let valor = input.value.replace(/\D/g, '');
+        let tamanho = valor.length;
+
+        // Adiciona a primeira barra (DD/)
+        if (tamanho > 2) {
+            valor = valor.substring(0, 2) + '/' + valor.substring(2);
+        }
+        // Adiciona a segunda barra (DD/MM/)
+        if (tamanho > 4) {
+            // Limita aos 4 dígitos do ano (total de 10 caracteres: DD/MM/AAAA)
+            valor = valor.substring(0, 5) + '/' + valor.substring(5, 9); 
+        }
+        
+        // Atualiza o valor no campo
+        input.value = valor;
+    }
+
+    // Função pura de JS para formatar hora (HH:MM)
+    function formatarHoraInput(event) {
+        let input = event.target;
+        // Remove tudo que não for dígito
+        let valor = input.value.replace(/\D/g, '');
+        let tamanho = valor.length;
+
+        // Adiciona os dois pontos (HH:)
+        if (tamanho > 2) {
+            // Limita aos 4 dígitos (HH:MM)
+            valor = valor.substring(0, 2) + ':' + valor.substring(2, 4);
+        }
+        
+        // Atualiza o valor no campo
+        input.value = valor;
+    }
+
+
 document.addEventListener('DOMContentLoaded', function() {
     
     // 1. Configura o seletor de DATA (em Português)
@@ -232,7 +271,14 @@ document.addEventListener('DOMContentLoaded', function() {
         dateFormat: "Y-m-d", // Formato que o banco de dados entende
         altInput: true, // Mostra um formato amigável para o usuário
         altFormat: "d/m/Y", // Formato amigável
-        minDate: "today" // Impede de agendar aulas no passado
+        minDate: "today", // Impede de agendar aulas no passado
+        allowInput: true, // Permite digitação
+        
+        // Conecta a máscara e o maxlength
+        onReady: function(selectedDates, dateStr, instance) {
+            instance.altInput.setAttribute('maxlength', '10');
+            instance.altInput.addEventListener('input', formatarDataInput);
+        }
     });
 
     // 2. Configura o seletor de HORÁRIO DE INÍCIO
@@ -240,7 +286,14 @@ document.addEventListener('DOMContentLoaded', function() {
         enableTime: true, // Ativa o modo de hora
         noCalendar: true, // Desativa o calendário
         dateFormat: "H:i", // Formato 24h
-        time_24hr: true
+        time_24hr: true,
+        allowInput: true, // Permite digitação
+
+        // Conecta a máscara e o maxlength
+        onReady: function(selectedDates, dateStr, instance) {
+            instance.input.setAttribute('maxlength', '5');
+            instance.input.addEventListener('input', formatarHoraInput);
+        }
     });
     
     // 3. Configura o seletor de HORÁRIO DE FIM
@@ -248,7 +301,14 @@ document.addEventListener('DOMContentLoaded', function() {
         enableTime: true,
         noCalendar: true,
         dateFormat: "H:i",
-        time_24hr: true
+        time_24hr: true,
+        allowInput: true, // Permite digitação
+
+        // Conecta a máscara e o maxlength
+        onReady: function(selectedDates, dateStr, instance) {
+            instance.input.setAttribute('maxlength', '5');
+            instance.input.addEventListener('input', formatarHoraInput);
+        }
     });
     
 });

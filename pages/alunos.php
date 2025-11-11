@@ -463,18 +463,21 @@ const randomValues = new Uint32Array(tamanho);
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    
-    // Configura o seletor de DATA (em Português)
-    // O ID correto neste formulário é "data_contratacao"
-    flatpickr("#data_nascimento", {
-        locale: "pt", // Usa a tradução que carregamos
-        dateFormat: "Y-m-d", // Formato que o banco de dados entende
-        altInput: true, // Mostra um formato amigável para o usuário
-        altFormat: "d/m/Y", // Formato amigável
-        // Removemos a opção "minDate: 'today'" porque a data de contratação pode ser no passado.
-    });
-    
-});
+        
+        // 1. Configura o seletor de DATA (em Português)
+        flatpickr("#data_nascimento", {
+            locale: "pt", // Usa a tradução que carregamos
+            dateFormat: "Y-m-d", // Formato que o banco de dados entende
+            altInput: true, // Mostra um formato amigável para o usuário
+            altFormat: "d/m/Y", // Formato amigável
+            allowInput: true, // <-- Corrigido (era true.)
+            
+            // <-- Conecta a máscara e o maxlength
+            onReady: function(selectedDates, dateStr, instance) {
+                instance.altInput.setAttribute('maxlength', '10');
+                instance.altInput.addEventListener('input', formatarDataInput);
+            }
+        });
 </script>
 
 

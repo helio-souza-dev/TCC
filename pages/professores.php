@@ -155,10 +155,10 @@ $professores = $resultado->fetch_all(MYSQLI_ASSOC);
             </div>
 
                             <div class="form-group">
-                <label for="data_contratacao">Data de Nascimento: <span style="color: red;">*</span></label>
-                <input type="text" id="data_contratacao" name="data_contratacao" required 
+                <label for="data_nascimento">Data de Nascimento: <span style="color: red;">*</span></label>
+                <input type="text" id="data_nascimento" name="data_nascimento" required 
                        placeholder="Selecione uma data"
-                       value="<?php echo htmlspecialchars($_POST['data_contratacao'] ?? date('Y-m-d')); ?>">
+                       value="<?php echo htmlspecialchars($_POST['data_nascimento'] ?? ''); ?>">
             </div>
 
              <div class="form-row">
@@ -308,16 +308,58 @@ document.getElementById('cpf').addEventListener('input', function(e) {
 </script>
 
 <script>
+    // Função pura de JS para formatar data (DD/MM/AAAA)
+    function formatarDataInput(event) {
+        let input = event.target;
+        // Remove tudo que não for dígito
+        let valor = input.value.replace(/\D/g, '');
+        let tamanho = valor.length;
+
+        // Adiciona a primeira barra (DD/)
+        if (tamanho > 2) {
+            valor = valor.substring(0, 2) + '/' + valor.substring(2);
+        }
+        // Adiciona a segunda barra (DD/MM/)
+        if (tamanho > 4) {
+            // Limita aos 4 dígitos do ano (total de 10 caracteres: DD/MM/AAAA)
+            valor = valor.substring(0, 5) + '/' + valor.substring(5, 9); 
+        }
+        
+        // Atualiza o valor no campo
+        input.value = valor;
+    }
+
+
 document.addEventListener('DOMContentLoaded', function() {
     
-    // Configura o seletor de DATA (em Português)
-    // O ID correto neste formulário é "data_contratacao"
+    // 1. Configura o seletor para DATA DE NASCIMENTO
+    flatpickr("#data_nascimento", {
+        locale: "pt",
+        dateFormat: "Y-m-d",
+        altInput: true,
+        altFormat: "d/m/Y",
+        allowInput: true, // Permite digitação
+        
+        // Conecta a máscara e o maxlength
+        onReady: function(selectedDates, dateStr, instance) {
+            instance.altInput.setAttribute('maxlength', '10');
+            instance.altInput.addEventListener('input', formatarDataInput);
+        }
+    });
+
+    // 2. Configura o seletor para DATA DE CONTRATAÇÃO
     flatpickr("#data_contratacao", {
-        locale: "pt", // Usa a tradução que carregamos
-        dateFormat: "Y-m-d", // Formato que o banco de dados entende
-        altInput: true, // Mostra um formato amigável para o usuário
-        altFormat: "d/m/Y", // Formato amigável
-        // Removemos a opção "minDate: 'today'" porque a data de contratação pode ser no passado.
+        locale: "pt",
+        dateFormat: "Y-m-d",
+        altInput: true,
+        altFormat: "d/m/Y",
+        allowInput: true, // Permite digitação
+        
+        // Conecta a máscara e o maxlength
+        onReady: function(selectedDates, dateStr, instance) {
+            instance.altInput.setAttribute('maxlength', '10');
+            instance.altInput.addEventListener('input', formatarDataInput);
+        }
     });
     
 });

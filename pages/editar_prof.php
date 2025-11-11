@@ -146,7 +146,7 @@ if ($professor_id_to_load) {
                 <h4> Dados Profissionais e Musicais</h4>
                 <div class="form-row">
                     <div class="form-group"><label for="formacao">Formação:</label><input type="text" id="formacao" name="formacao" value="<?php echo htmlspecialchars($professor['formacao'] ?? ''); ?>"></div>
-                    <div class="form-group"><label for="data_contratacao">Data de Contratação:</label><input type="date" id="data_contratacao" name="data_contratacao" value="<?php echo htmlspecialchars($professor['data_contratacao'] ?? ''); ?>"></div>
+                    <div class="form-group"><label for="data_contratacao">Data de Contratação:</label><input type="text" id="data_contratacao" name="data_contratacao" value="<?php echo htmlspecialchars($professor['data_contratacao'] ?? ''); ?>" placeholder="Selecione ou digite a data"></div>
                 </div>
                  <div class="form-row">
                     <div class="form-group"><label for="instrumentos_leciona">Instrumentos que Leciona:</label><input type="text" id="instrumentos_leciona" name="instrumentos_leciona" value="<?php echo htmlspecialchars($professor['instrumentos_leciona'] ?? ''); ?>"></div>
@@ -221,4 +221,75 @@ const randomValues = new Uint32Array(tamanho);
     });
 
     // (O listener de 'input' foi removido, pois o campo é readonly)
+</script>
+
+
+<script>
+    // Função pura de JS para formatar data (DD/MM/AAAA)
+    function formatarDataInput(event) {
+        let input = event.target;
+        let valor = input.value.replace(/\D/g, '');
+        let tamanho = valor.length;
+
+        if (tamanho > 2) {
+            valor = valor.substring(0, 2) + '/' + valor.substring(2);
+        }
+        if (tamanho > 4) {
+            valor = valor.substring(0, 5) + '/' + valor.substring(5, 9); 
+        }
+        input.value = valor;
+    }
+
+    // Função para formatar CPF (000.000.000-00)
+    function formatarCPF(event) {
+        let input = event.target;
+        let value = input.value.replace(/\D/g, '');
+        value = value.replace(/(\d{3})(\d)/, '$1.$2');
+        value = value.replace(/(\d{3})(\d)/, '$1.$2');
+        value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+        input.value = value;
+    }
+
+    // Função para formatar RG (00.000.000-0)
+    function formatarRG(event) {
+        let input = event.target;
+        let value = input.value.replace(/\D/g, '');
+        value = value.replace(/^(\d{2})(\d)/, '$1.$2');
+        value = value.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
+        value = value.replace(/\.(\d{3})(\d)$/, '.$1-$2');
+        input.value = value;
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        // 1. Configura o seletor de DATA (em Português)
+        flatpickr("#data_contratacao", {
+            locale: "pt",
+            dateFormat: "Y-m-d",
+            altInput: true,
+            altFormat: "d/m/Y",
+            allowInput: true, // Permite digitação
+            
+            // Conecta a máscara e o maxlength
+            onReady: function(selectedDates, dateStr, instance) {
+                instance.altInput.setAttribute('maxlength', '10');
+                instance.altInput.addEventListener('input', formatarDataInput);
+            }
+        });
+
+        // 2. Adiciona a máscara de CPF
+        const cpfInput = document.getElementById('cpf');
+        if (cpfInput) {
+            cpfInput.setAttribute('maxlength', '14'); // 000.000.000-00
+            cpfInput.addEventListener('input', formatarCPF);
+        }
+
+        // 3. Adiciona a máscara de RG
+        const rgInput = document.getElementById('rg');
+        if (rgInput) {
+            rgInput.setAttribute('maxlength', '12'); // 00.000.000-0
+            rgInput.addEventListener('input', formatarRG);
+        }
+        
+    });
 </script>

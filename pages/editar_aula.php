@@ -190,32 +190,93 @@ try {
 
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    
-    // 1. Configura o seletor de DATA (em Português)
-    flatpickr("#nova_data", {
-        locale: "pt", // Usa a tradução
-        dateFormat: "Y-m-d", // Formato do banco
-        altInput: true,
-        altFormat: "d/m/Y", // Formato amigável
-        minDate: "today"
-    });
+    // Função pura de JS para formatar data (DD/MM/AAAA)
+    function formatarDataInput(event) {
+        let input = event.target;
+        // Remove tudo que não for dígito
+        let valor = input.value.replace(/\D/g, '');
+        let tamanho = valor.length;
 
-    // 2. Configura o seletor de HORÁRIO DE INÍCIO
-    flatpickr("#novo_horario_inicio", {
-        enableTime: true,
-        noCalendar: true,
-        dateFormat: "H:i",
-        time_24hr: true
+        // Adiciona a primeira barra (DD/)
+        if (tamanho > 2) {
+            valor = valor.substring(0, 2) + '/' + valor.substring(2);
+        }
+        // Adiciona a segunda barra (DD/MM/)
+        if (tamanho > 4) {
+            // Limita aos 4 dígitos do ano (total de 10 caracteres: DD/MM/AAAA)
+            valor = valor.substring(0, 5) + '/' + valor.substring(5, 9); 
+        }
+        
+        // Atualiza o valor no campo
+        input.value = valor;
+    }
+
+    // <-- NOVA FUNÇÃO para formatar hora (HH:MM)
+    function formatarHoraInput(event) {
+        let input = event.target;
+        // Remove tudo que não for dígito
+        let valor = input.value.replace(/\D/g, '');
+        let tamanho = valor.length;
+
+        // Adiciona os dois pontos (HH:)
+        if (tamanho > 2) {
+            // Limita aos 4 dígitos (HH:MM)
+            valor = valor.substring(0, 2) + ':' + valor.substring(2, 4);
+        }
+        
+        // Atualiza o valor no campo
+        input.value = valor;
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        // 1. Configura o seletor de DATA (em Português)
+        flatpickr("#nova_data", {
+            locale: "pt", // Usa a tradução
+            dateFormat: "Y-m-d", // Formato do banco
+            altInput: true,
+            altFormat: "d/m/Y", // Formato amigável
+            minDate: "today",
+            allowInput: true, // <-- CORRIGIDO
+            
+            // <-- CONECTA A FUNÇÃO DE FORMATAR DATA
+            onReady: function(selectedDates, dateStr, instance) {
+                // instance.altInput é o campo de data VISÍVEL (DD/MM/AAAA)
+                instance.altInput.setAttribute('maxlength', '10');
+                instance.altInput.addEventListener('input', formatarDataInput);
+            }
+        });
+
+        // 2. Configura o seletor de HORÁRIO DE INÍCIO
+        flatpickr("#novo_horario_inicio", {
+            enableTime: true,
+            noCalendar: true,
+            dateFormat: "H:i",
+            time_24hr: true,
+            allowInput: true, // <-- CORRIGIDO
+            
+            // <-- CONECTA A FUNÇÃO DE FORMATAR HORA
+            onReady: function(selectedDates, dateStr, instance) {
+                // instance.input é o campo de hora (não tem altInput)
+                instance.input.setAttribute('maxlength', '5');
+                instance.input.addEventListener('input', formatarHoraInput);
+            }
+        });
+        
+        // 3. Configura o seletor de HORÁRIO DE FIM
+        flatpickr("#novo_horario_fim", {
+            enableTime: true,
+            noCalendar: true,
+            dateFormat: "H:i",
+            time_24hr: true,
+            allowInput: true, // <-- CORRIGIDO
+            
+            // <-- CONECTA A FUNÇÃO DE FORMATAR HORA
+            onReady: function(selectedDates, dateStr, instance) {
+                instance.input.setAttribute('maxlength', '5');
+                instance.input.addEventListener('input', formatarHoraInput);
+            }
+        });
+        
     });
-    
-    // 3. Configura o seletor de HORÁRIO DE FIM
-    flatpickr("#novo_horario_fim", {
-        enableTime: true,
-        noCalendar: true,
-        dateFormat: "H:i",
-        time_24hr: true
-    });
-    
-});
 </script>
