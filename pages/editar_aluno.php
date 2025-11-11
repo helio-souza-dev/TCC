@@ -224,7 +224,7 @@ document.addEventListener('DOMContentLoaded', function() {
    const inputSenha = document.getElementById('new_password');
 
     // 2. A sua função de gerar senha, "traduzida" para JavaScript
-    function gerarSenhaJS(tamanho = 12) {
+    function gerarSenhaJS(tamanho = 8) {
         const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
         const tamanhoStr = caracteres.length;
         let strAleatorio = '';
@@ -246,7 +246,7 @@ const randomValues = new Uint32Array(tamanho);
     botaoGerar.addEventListener('click', function() {
         // Quando o botão for clicado:
         // 1. Gera uma nova senha
-        const novaSenha = gerarSenhaJS(12); // Gera uma senha de 12 caracteres
+        const novaSenha = gerarSenhaJS(8); // Gera uma senha de 8 caracteres
         
         // 2. Coloca a senha gerada no campo de input
         inputSenha.value = novaSenha;

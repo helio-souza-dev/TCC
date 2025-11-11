@@ -51,7 +51,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'chang
     }
 }
 
-// --- LÓGICA PARA CARREGAR DADOS DO PERFIL ---
+
+// --- LÓGICA DE ATUALIZAÇÃO DO PERFIL (Dados Editáveis) ---
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'update_profile') {
+    
+    iniciar_transacao($conn);
+
+    try {
+        // Atualiza a tabela USUARIOS (campos não-críticos)
+        $sql_user = "UPDATE usuarios SET telefone = ?, cidade = ?, endereco = ?, complemento = ? WHERE id = ?";
+        executar_consulta($conn, $sql_user, [
+            $_POST['telefone'], $_POST['cidade'], $_POST['endereco'], $_POST['complemento'], $usuario_id
+        ]);
+        
+        if (isAluno()) {
+            // Atualiza a tabela ALUNOS
+            $aluno_id = $_POST['aluno_id'];
+            $sql_aluno = "UPDATE alunos SET instrumento = ?, nivel_experiencia = ?, tipo_aula_desejada = ?, preferencia_horario = ?, possui_instrumento = ?, objetivos = ? WHERE id = ?";
+            executar_consulta($conn, $sql_aluno, [
+                $_POST['instrumento'], $_POST['nivel_experiencia'], $_POST['tipo_aula_desejada'], 
+                $_POST['preferencia_horario'], isset($_POST['possui_instrumento']) ? 1 : 0, $_POST['objetivos'], $aluno_id
+            ]);
+            
+        } elseif (isProfessor()) {
+            // Atualiza a tabela PROFESSORES
+            $professor_id = $_POST['professor_id'];
+            $sql_prof = "UPDATE professores SET formacao = ?, instrumentos_leciona = ?, valor_hora_aula = ?, biografia = ? WHERE id = ?";
+            executar_consulta($conn, $sql_prof, [
+                $_POST['formacao'], $_POST['instrumentos_leciona'], $_POST['valor_hora_aula'], $_POST['biografia'], $professor_id
+            ]);
+        }
+        
+        confirmar_transacao($conn);
+        $message = 'Dados de perfil atualizados com sucesso!';
+        
+    } catch (Exception $e) {
+        reverter_transacao($conn);
+        $error = 'Erro ao atualizar dados: ' . $e->getMessage();
+    }
+}
+
+
+// --- LÓGICA PARA CARREGAR DADOS DO PERFIL (Recarregar após updates) ---
 try {
     $sql = '';
     
@@ -91,9 +132,19 @@ try {
     <?php if($error): ?><div class="alert alert-error"> <?php echo htmlspecialchars($error); ?></div><?php endif; ?>
     
     <?php if ($userData): ?>
+    
+    <form method="POST">
+        <input type="hidden" name="action" value="update_profile">
         
+        <?php if(isAluno()): ?>
+            <input type="hidden" name="aluno_id" value="<?php echo htmlspecialchars($userData['aluno_id']); ?>">
+        <?php elseif(isProfessor()): ?>
+            <input type="hidden" name="professor_id" value="<?php echo htmlspecialchars($userData['professor_id']); ?>">
+        <?php endif; ?>
+
         <div class="form-section">
-            <h4> Dados Pessoais</h4>
+            <h4> Dados Pessoais (Não Editáveis por aqui)</h4>
+            <p class="alert alert-info">Estes campos (Nome, CPF, RG, Data de Nasc.) são críticos e só podem ser alterados mediante solicitação e aprovação de um administrador.</p>
             <div class="form-row">
                 <div class="form-group"><label>Nome Completo:</label><input type="text" readonly value="<?php echo htmlspecialchars($userData['nome'] ?? ''); ?>"></div>
                 <div class="form-group"><label>Email:</label><input type="email" readonly value="<?php echo htmlspecialchars($userData['email'] ?? ''); ?>"></div>
@@ -103,24 +154,52 @@ try {
                 <div class="form-group"><label>RG:</label><input type="text" readonly value="<?php echo htmlspecialchars($userData['rg'] ?? ''); ?>"></div>
             </div>
             <div class="form-row">
-                <div class="form-group"><label>Telefone:</label><input type="text" readonly value="<?php echo htmlspecialchars($userData['telefone'] ?? ''); ?>"></div>
-                <?php if(isAluno()): ?>
-                    <div class="form-group"><label>Data de Nascimento:</label><input type="date" readonly value="<?php echo htmlspecialchars($userData['data_nascimento'] ?? ''); ?>"></div>
-                <?php endif; ?>
+                <div class="form-group"><label>Data de Nascimento:</label><input type="date" readonly value="<?php echo htmlspecialchars($userData['data_nascimento'] ?? ''); ?>"></div>
+                <div class="form-group"><label>Telefone:</label><input type="text" name="telefone" value="<?php echo htmlspecialchars($userData['telefone'] ?? ''); ?>"></div>
+            </div>
+             <div class="form-row">
+                <div class="form-group"><label>Cidade:</label><input type="text" name="cidade" value="<?php echo htmlspecialchars($userData['cidade'] ?? ''); ?>"></div>
+                <div class="form-group"><label>Endereço:</label><input type="text" name="endereco" value="<?php echo htmlspecialchars($userData['endereco'] ?? ''); ?>"></div>
+                <div class="form-group"><label>Complemento:</label><input type="text" name="complemento" value="<?php echo htmlspecialchars($userData['complemento'] ?? ''); ?>"></div>
             </div>
         </div>
         
         <?php if(isAluno()): ?>
         <div class="form-section">
-            <h4> Dados de Aluno</h4>
+            <h4> Dados de Aluno Editáveis</h4>
             <div class="form-row">
                 <div class="form-group"><label>Matrícula:</label><input type="text" readonly value="<?php echo htmlspecialchars($userData['matricula'] ?? ''); ?>"></div>
-                <div class="form-group"><label>Instrumento:</label><input type="text" readonly value="<?php echo htmlspecialchars($userData['instrumento'] ?? ''); ?>"></div>
+                <div class="form-group"><label>Instrumento Principal:</label><input type="text" name="instrumento" value="<?php echo htmlspecialchars($userData['instrumento'] ?? ''); ?>"></div>
             </div>
             <div class="form-row">
-                <div class="form-group"><label>Nível:</label><input type="text" readonly value="<?php echo htmlspecialchars($userData['nivel_experiencia'] ?? ''); ?>"></div>
-                <div class="form-group"><label>Possui Instrumento:</label><input type="text" readonly value="<?php echo ($userData['possui_instrumento'] ?? 0) ? 'Sim' : 'Não'; ?>"></div>
+                <div class="form-group"><label>Nível de Experiência:</label>
+                    <select name="nivel_experiencia">
+                        <option value="Iniciante" <?php echo ($userData['nivel_experiencia'] == 'Iniciante') ? 'selected' : ''; ?>>Iniciante</option>
+                        <option value="Básico" <?php echo ($userData['nivel_experiencia'] == 'Básico') ? 'selected' : ''; ?>>Básico</option>
+                        <option value="Intermediário" <?php echo ($userData['nivel_experiencia'] == 'Intermediário') ? 'selected' : ''; ?>>Intermediário</option>
+                        <option value="Avançado" <?php echo ($userData['nivel_experiencia'] == 'Avançado') ? 'selected' : ''; ?>>Avançado</option>
+                    </select>
+                </div>
+                <div class="form-group"><label>Tipo de Aula Desejada:</label><input type="text" name="tipo_aula_desejada" value="<?php echo htmlspecialchars($userData['tipo_aula_desejada'] ?? ''); ?>"></div>
             </div>
+            <div class="form-row">
+                <div class="form-group"><label>Preferência de Horário:</label><input type="text" name="preferencia_horario" value="<?php echo htmlspecialchars($userData['preferencia_horario'] ?? ''); ?>"></div>
+                <div class="form-group">
+                    <label>Possui Instrumento?</label>
+                    <div class="radio-group">
+                        <label>
+                            <input type="radio" name="possui_instrumento" value="1" <?php echo ($userData['possui_instrumento'] == 1) ? 'checked' : ''; ?>>
+                            <span class="custom-radio"></span> Sim
+                        </label>
+                        <label>
+                            <input type="radio" name="possui_instrumento" value="0" <?php echo ($userData['possui_instrumento'] != 1) ? 'checked' : ''; ?>>
+                            <span class="custom-radio"></span> Não
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group"><label>Objetivos com a Música:</label><textarea name="objetivos" rows="3"><?php echo htmlspecialchars($userData['objetivos'] ?? ''); ?></textarea></div>
+            
             <?php if(!empty($userData['nome_responsavel'])): ?>
             <div class="form-section" style="padding: 15px; border-left: 4px solid #f0ad4e;">
                  <p><strong>Responsável:</strong> <?php echo htmlspecialchars($userData['nome_responsavel']); ?></p>
@@ -132,18 +211,22 @@ try {
 
         <?php if(isProfessor()): ?>
         <div class="form-section">
-            <h4> Dados de Professor</h4>
+            <h4> Dados de Professor Editáveis</h4>
             <div class="form-row">
-                <div class="form-group"><label>Formação:</label><input type="text" readonly value="<?php echo htmlspecialchars($userData['formacao'] ?? ''); ?>"></div>
+                <div class="form-group"><label>Formação:</label><input type="text" name="formacao" value="<?php echo htmlspecialchars($userData['formacao'] ?? ''); ?>"></div>
                 <div class="form-group"><label>Data Contratação:</label><input type="date" readonly value="<?php echo htmlspecialchars($userData['data_contratacao'] ?? ''); ?>"></div>
             </div>
              <div class="form-row">
-                <div class="form-group"><label>Instrumentos:</label><input type="text" readonly value="<?php echo htmlspecialchars($userData['instrumentos_leciona'] ?? ''); ?>"></div>
-                <div class="form-group"><label>Valor Hora/Aula (R$):</label><input type="text" readonly value="<?php echo htmlspecialchars($userData['valor_hora_aula'] ?? ''); ?>"></div>
+                <div class="form-group"><label>Instrumentos:</label><input type="text" name="instrumentos_leciona" value="<?php echo htmlspecialchars($userData['instrumentos_leciona'] ?? ''); ?>"></div>
+                <div class="form-group"><label>Valor Hora/Aula (R$):</label><input type="text" name="valor_hora_aula" value="<?php echo htmlspecialchars($userData['valor_hora_aula'] ?? ''); ?>"></div>
             </div>
-            <div class="form-group"><label>Biografia:</label><textarea readonly rows="3"><?php echo htmlspecialchars($userData['biografia'] ?? ''); ?></textarea></div>
+            <div class="form-group"><label>Biografia:</label><textarea name="biografia" rows="3"><?php echo htmlspecialchars($userData['biografia'] ?? ''); ?></textarea></div>
         </div>
         <?php endif; ?>
+
+        <button type="submit" class="btn btn-primary mt-20">Salvar Alterações do Perfil</button>
+    </form>
+
 
         <div class="form-section" style="margin-top: 30px;">
             <h4> Alterar Senha</h4>
@@ -166,12 +249,13 @@ try {
                     <small id="password_match_status"></small>
                 </div>
                 
-                <button type="submit" id="btnChangePassword" class="btn btn-primary" disabled>Alterar Senha</button>
+                <button type="submit" id="btnChangePassword" class="btn btn-warning" disabled>Alterar Senha</button>
                 </form>
         </div>
+
         <div class="form-section" style="margin-top: 30px;">
-            <h4> Precisa Alterar Outros Dados?</h4>
-            <p>Seus dados pessoais (nome, CPF, etc.) só podem ser alterados mediante solicitação e aprovação de um administrador.</p>
+            <h4> Precisa Alterar Dados Pessoais Críticos?</h4>
+            <p>Seus dados pessoais CRÍTICOS (Nome, CPF, RG, Data de Nascimento) só podem ser alterados mediante solicitação e aprovação de um administrador.</p>
             <div class="flex gap-10 mt-10">
                 <a href="dashboard.php?page=solicitar-dados" class="btn btn-secondary">
                     Criar Nova Solicitação

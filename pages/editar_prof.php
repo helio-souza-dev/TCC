@@ -114,8 +114,13 @@ if ($professor_id_to_load) {
                 <input type="hidden" name="usuario_id" value="<?php echo htmlspecialchars($professor['usuario_id']); ?>">
                 <div class="form-group">
                     <label for="new_password">Nova Senha (mínimo 8 caracteres):</label>
-                    <input type="password" id="new_password" name="new_password" required minlength="8">
+                    
+                    <div style="display: flex; gap: 10px;">
+                        <input type="password" id="new_password" name="new_password" required minlength="8" style="flex-grow: 1;" readonly placeholder="Clique em 'Gerar' para criar a senha">
+                        <button type="button" id="btnGerarSenhaEdicao" class="btn btn-secondary">Gerar</button>
+                    </div>
                 </div>
+                
                 <button type="submit" class="btn btn-warning" onclick="return confirm('Tem certeza que deseja alterar a senha deste usuário?')">Salvar Nova Senha</button>
             </form>
         </div>
@@ -173,3 +178,47 @@ if ($professor_id_to_load) {
         </form>
     <?php endif; ?>
 </div>
+
+<script>
+    // 1. Pega os elementos que acabamos de criar no HTML
+   const botaoGerar = document.getElementById('btnGerarSenhaEdicao'); // <-- ID do novo botão
+   const inputSenha = document.getElementById('new_password');
+
+    // 2. A sua função de gerar senha, "traduzida" para JavaScript
+    function gerarSenhaJS(tamanho = 8) {
+        const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        const tamanhoStr = caracteres.length;
+        let strAleatorio = '';
+
+        // Em JS, usamos crypto.getRandomValues para segurança
+       // Linha Correta:
+const randomValues = new Uint32Array(tamanho);
+        window.crypto.getRandomValues(randomValues);
+
+        for (let i = 0; i < tamanho; i++) {
+            // Isso é o equivalente seguro de 'random_int'
+            const index = randomValues[i] % tamanhoStr;
+            strAleatorio += caracteres[index];
+        }
+        return strAleatorio;
+    }
+
+    // 3. Adiciona o "ouvinte" de clique no botão
+    botaoGerar.addEventListener('click', function() {
+        // Quando o botão for clicado:
+        // 1. Gera uma nova senha
+        const novaSenha = gerarSenhaJS(8); // Gera uma senha de 8 caracteres
+        
+        // 2. Coloca a senha gerada no campo de input
+        inputSenha.value = novaSenha;
+        
+        // 3. Muda o tipo para 'text' para o usuário ver a senha
+        inputSenha.type = 'text';
+
+        // 4. (NOVO) Desabilita o botão para que só possa ser gerada uma vez
+        botaoGerar.disabled = true;
+        botaoGerar.textContent = 'Gerada!'; // Muda o texto do botão
+    });
+
+    // (O listener de 'input' foi removido, pois o campo é readonly)
+</script>

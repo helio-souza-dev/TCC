@@ -159,18 +159,19 @@ $alunos = $resultado->fetch_all(MYSQLI_ASSOC);
 
         <div class="form-section">
             <h4>Dados Pessoais</h4>
-
+    <!--Email-->
             <div class="form-row">
                 <div class="form-group">
                     <label for="nome">Nome Completo:</label>
                     <input type="text" id="nome" name="nome" required value="<?php echo htmlspecialchars($_POST['nome'] ?? ''); ?>">
                 </div>
+    <!--Email-->
                 <div class="form-group">
                     <label for="email">Email:</label>
                     <input type="email" id="email" name="email" required value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>">
                 </div>
             </div>
-
+    <!--Senha e Gerar senha-->
             <div class="form-row">
                 <div class="form-group" style="flex: 1;">
                     <label for="senha">Senha (mín. 8 caracteres):</label>
@@ -180,26 +181,38 @@ $alunos = $resultado->fetch_all(MYSQLI_ASSOC);
                     </div>
                 </div>
             </div>
-
+    <!--Cpf-->
             <div class="form-row">
                 <div class="form-group">
                     <label for="cpf">CPF:</label>
                     <input type="text" id="cpf" name="cpf" required value="<?php echo htmlspecialchars($_POST['cpf'] ?? ''); ?>">
                 </div>
+    <!--Rg-->
                 <div class="form-group">
                     <label for="rg">RG:</label>
                     <input type="text" id="rg" name="rg" maxlength="12" required value="<?php echo htmlspecialchars($_POST['rg'] ?? ''); ?>">
                 </div>
             </div>
-
+    <!--Data de Nascimento-->
             <div class="form-group">
                 <label for="data_nascimento">Data de Nascimento: <span style="color: red;">*</span></label>
                 <input type="text" id="data_nascimento" name="data_nascimento" required 
                        placeholder="Selecione uma data"
                        value="<?php echo htmlspecialchars($_POST['data_contratacao'] ?? date('Y-m-d')); ?>">
             </div>
-
+    <!--Telefone-->
             <div class="form-row">
+                <div class="form-group">
+                    <label for="telefone">Telefone:</label>
+                    <input type="text" id="telefone" name="telefone" placeholder="(00) 00000-0000" value="<?php echo htmlspecialchars($_POST['telefone'] ?? ''); ?>">
+                </div>
+            </div>
+
+        </div> 
+        
+        <div class="form-section"> <h4>Endereço</h4>
+
+        <div class="form-row">
                 <div class="form-group">
                     <label for="cidade">Cidade:</label>
                     <input type="text" id="cidade" name="cidade" value="<?php echo htmlspecialchars($_POST['cidade'] ?? ''); ?>">
@@ -216,14 +229,7 @@ $alunos = $resultado->fetch_all(MYSQLI_ASSOC);
                 </div>
             </div>
 
-        </div> <div class="form-section"> <h4>Dados Musicais</h4>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="telefone">Telefone:</label>
-                    <input type="text" id="telefone" name="telefone" placeholder="(00) 00000-0000" value="<?php echo htmlspecialchars($_POST['telefone'] ?? ''); ?>">
-                </div>
-            </div>
+            
         </div>
 
         <div class="form-section">
