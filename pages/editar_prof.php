@@ -26,7 +26,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Criptografa a nova senha.
             $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
             
-
             $sql = "UPDATE usuarios SET senha = ?, forcar_troca_senha = 1 WHERE id = ?";
             executar_consulta($conn, $sql, [$hashedPassword, $usuario_id]);
             
@@ -44,9 +43,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         iniciar_transacao($conn);
         try {
             // 1. Atualiza a tabela 'usuarios'.
-            $sql_user = "UPDATE usuarios SET nome=?, email=?, cpf=?, rg=?, cidade=?, endereco=?, complemento=?, ativo=? WHERE id=?";
+            // *** CORREÇÃO: Adicionado data_nascimento = ? e telefone = ? ***
+            $sql_user = "UPDATE usuarios SET nome=?, email=?, cpf=?, rg=?, data_nascimento=?, telefone=?, cidade=?, endereco=?, complemento=?, ativo=? WHERE id=?";
             executar_consulta($conn, $sql_user, [
                 $_POST['nome'], $_POST['email'], $_POST['cpf'], $_POST['rg'],
+                $_POST['data_nascimento'], $_POST['telefone'], // <-- Campos adicionados
                 $_POST['cidade'], $_POST['endereco'], $_POST['complemento'],
                 isset($_POST['ativo']) ? 1 : 0,
                 $usuario_id
@@ -112,6 +113,8 @@ if ($professor_id_to_load) {
             <form method="POST">
                 <input type="hidden" name="action" value="change_password">
                 <input type="hidden" name="usuario_id" value="<?php echo htmlspecialchars($professor['usuario_id']); ?>">
+                <input type="hidden" name="professor_id" value="<?php echo htmlspecialchars($professor['professor_id']); ?>">
+                
                 <div class="form-group">
                     <label for="new_password">Nova Senha (mínimo 8 caracteres):</label>
                     
@@ -137,8 +140,21 @@ if ($professor_id_to_load) {
                     <div class="form-group"><label for="email">Email:</label><input type="email" id="email" name="email" required value="<?php echo htmlspecialchars($professor['email']); ?>"></div>
                 </div>
                 <div class="form-row">
-                    <div class="form-group"><label for="cpf">CPF:</label><input type="text" id="cpf" name="cpf" required value="<?php echo htmlspecialchars($professor['cpf']); ?>"></div>
-                    <div class="form-group"><label for="rg">RG:</label><input type="text" id="rg" name="rg" value="<?php echo htmlspecialchars($professor['rg'] ?? ''); ?>"></div>
+                    <div class="form-group"><label for="cpf">CPF:</label><input readonlytype="text" id="cpf" name="cpf" required value="<?php echo htmlspecialchars($professor['cpf']); ?>"></div>
+                    <div class="form-group"><label for="rg">RG:</label><input readonly type="text" id="rg" name="rg" value="<?php echo htmlspecialchars($professor['rg'] ?? ''); ?>"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="data_nascimento">Data de Nascimento: <span style="color: red;">*</span></label>
+                        <input type="text" id="data_nascimento" name="data_nascimento" required 
+                               placeholder="Selecione uma data"
+                               value="<?php echo htmlspecialchars($professor['data_nascimento'] ?? ''); ?>">
+                    </div>
+                    <div class="form-group">
+                        <label for="telefone">Telefone:</label>
+                        <input type="text" id="telefone" name="telefone" placeholder="(00) 00000-0000" 
+                               value="<?php echo htmlspecialchars($professor['telefone'] ?? ''); ?>">
+                    </div>
                 </div>
             </div>
 
@@ -149,7 +165,22 @@ if ($professor_id_to_load) {
                     <div class="form-group"><label for="data_contratacao">Data de Contratação:</label><input type="text" id="data_contratacao" name="data_contratacao" value="<?php echo htmlspecialchars($professor['data_contratacao'] ?? ''); ?>" placeholder="Selecione ou digite a data"></div>
                 </div>
                  <div class="form-row">
-                    <div class="form-group"><label for="instrumentos_leciona">Instrumentos que Leciona:</label><input type="text" id="instrumentos_leciona" name="instrumentos_leciona" value="<?php echo htmlspecialchars($professor['instrumentos_leciona'] ?? ''); ?>"></div>
+                    <div class="form-group">
+                        <label for="instrumentos_leciona">Instrumentos que Leciona:</label>
+                        <select id="instrumentos_leciona" name="instrumentos_leciona" required>
+                            <option value="" disabled>-- Selecione --</option>
+                            <option value="Violão" <?php echo ($professor['instrumentos_leciona'] ?? '') == 'Violão' ? 'selected' : ''; ?>>Violão</option>
+                            <option value="Guitarra" <?php echo ($professor['instrumentos_leciona'] ?? '') == 'Guitarra' ? 'selected' : ''; ?>>Guitarra</option>
+                            <option value="Baixo" <?php echo ($professor['instrumentos_leciona'] ?? '') == 'Baixo' ? 'selected' : ''; ?>>Baixo</option>
+                            <option value="Bateria" <?php echo ($professor['instrumentos_leciona'] ?? '') == 'Bateria' ? 'selected' : ''; ?>>Bateria</option>
+                            <option value="Teclado" <?php echo ($professor['instrumentos_leciona'] ?? '') == 'Teclado' ? 'selected' : ''; ?>>Teclado</option>
+                            <option value="Piano" <?php echo ($professor['instrumentos_leciona'] ?? '') == 'Piano' ? 'selected' : ''; ?>>Piano</option>
+                            <option value="Canto" <?php echo ($professor['instrumentos_leciona'] ?? '') == 'Canto' ? 'selected' : ''; ?>>Canto</option>
+                            <option value="Ukulele" <?php echo ($professor['instrumentos_leciona'] ?? '') == 'Ukulele' ? 'selected' : ''; ?>>Ukulele</option>
+                            <option value="Outro" <?php echo ($professor['instrumentos_leciona'] ?? '') == 'Outro' ? 'selected' : ''; ?>>Outro</option>
+                        </select>
+                    </div>
+                </div>
                 <div class="form-group"><label for="biografia">Biografia:</label><textarea id="biografia" name="biografia" rows="3"><?php echo htmlspecialchars($professor['biografia'] ?? ''); ?></textarea></div>
             </div>
             
@@ -165,7 +196,10 @@ if ($professor_id_to_load) {
             <div class="form-section">
                 <h4> Status</h4>
                 <div class="form-group">
-                    <label><input type="checkbox" name="ativo" value="1" <?php echo ($professor['ativo'] ?? 1) ? 'checked' : ''; ?>> Professor Ativo</label>
+                    <label>
+                        <input type="checkbox" name="ativo" value="1" <?php echo ($professor['ativo'] ?? 1) ? 'checked' : ''; ?>>
+                        <span class="custom-checkbox"></span> Professor Ativo
+                    </label>
                 </div>
             </div>
 
@@ -202,23 +236,25 @@ const randomValues = new Uint32Array(tamanho);
     }
 
     // 3. Adiciona o "ouvinte" de clique no botão
-    botaoGerar.addEventListener('click', function() {
-        // Quando o botão for clicado:
-        // 1. Gera uma nova senha
-        const novaSenha = gerarSenhaJS(8); // Gera uma senha de 8 caracteres
-        
-        // 2. Coloca a senha gerada no campo de input
-        inputSenha.value = novaSenha;
-        
-        // 3. Muda o tipo para 'text' para o usuário ver a senha
-        inputSenha.type = 'text';
+    if (botaoGerar) { // Verifica se o botão existe
+        botaoGerar.addEventListener('click', function() {
+            // Quando o botão for clicado:
+            // 1. Gera uma nova senha
+            const novaSenha = gerarSenhaJS(8); // Gera uma senha de 8 caracteres
+            
+            // 2. Coloca a senha gerada no campo de input
+            if(inputSenha) { // Verifica se o input de senha existe
+                inputSenha.value = novaSenha;
+                
+                // 3. Muda o tipo para 'text' para o usuário ver a senha
+                inputSenha.type = 'text';
 
-        // 4. (NOVO) Desabilita o botão para que só possa ser gerada uma vez
-        botaoGerar.disabled = true;
-        botaoGerar.textContent = 'Gerada!'; // Muda o texto do botão
-    });
-
-    // (O listener de 'input' foi removido, pois o campo é readonly)
+                // 4. (NOVO) Desabilita o botão para que só possa ser gerada uma vez
+                botaoGerar.disabled = true;
+                botaoGerar.textContent = 'Gerada!'; // Muda o texto do botão
+            }
+        });
+    }
 </script>
 
 
@@ -257,10 +293,21 @@ const randomValues = new Uint32Array(tamanho);
         value = value.replace(/\.(\d{3})(\d)$/, '.$1-$2');
         input.value = value;
     }
+    
+    // *** FUNÇÃO ADICIONADA ***
+    // Função para formatar Telefone ( (00) 00000-0000 )
+    function formatarTelefone(event) {
+        let input = event.target;
+        let value = input.value.replace(/\D/g, '');
+        value = value.replace(/^(\d{2})(\d)/g, '($1) $2');
+        value = value.replace(/(\d{5})(\d)/, '$1-$2');
+        input.setAttribute('maxlength', '15'); // (00) 00000-0000
+        input.value = value;
+    }
 
     document.addEventListener('DOMContentLoaded', function() {
         
-        // 1. Configura o seletor de DATA (em Português)
+        // 1. Configura o seletor de DATA (Contratação)
         flatpickr("#data_contratacao", {
             locale: "pt",
             dateFormat: "Y-m-d",
@@ -268,7 +315,20 @@ const randomValues = new Uint32Array(tamanho);
             altFormat: "d/m/Y",
             allowInput: true, // Permite digitação
             
-            // Conecta a máscara e o maxlength
+            onReady: function(selectedDates, dateStr, instance) {
+                instance.altInput.setAttribute('maxlength', '10');
+                instance.altInput.addEventListener('input', formatarDataInput);
+            }
+        });
+        
+        // *** NOVO: Configura o seletor de DATA (Nascimento) ***
+        flatpickr("#data_nascimento", {
+            locale: "pt",
+            dateFormat: "Y-m-d",
+            altInput: true,
+            altFormat: "d/m/Y",
+            allowInput: true, // Permite digitação
+            
             onReady: function(selectedDates, dateStr, instance) {
                 instance.altInput.setAttribute('maxlength', '10');
                 instance.altInput.addEventListener('input', formatarDataInput);
@@ -287,6 +347,12 @@ const randomValues = new Uint32Array(tamanho);
         if (rgInput) {
             rgInput.setAttribute('maxlength', '12'); // 00.000.000-0
             rgInput.addEventListener('input', formatarRG);
+        }
+        
+        // 4. *** NOVO: Adiciona a máscara de Telefone ***
+        const telInput = document.getElementById('telefone');
+        if (telInput) {
+            telInput.addEventListener('input', formatarTelefone);
         }
         
     });

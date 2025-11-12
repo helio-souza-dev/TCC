@@ -22,6 +22,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['action'] === 'agendar_aula'
     // Validações básicas antes de ir para o banco.
     if (empty($aluno_id) || empty($disciplina) || empty($data_aula) || empty($horario_inicio) || empty($horario_fim)) {
         $error = "Todos os campos com * são obrigatórios.";
+
+    } elseif ($horario_fim <= $horario_inicio) {
+        $error = "O horário de término não pode ser igual ou anterior ao horário de início.";
+
     } else {
         try {
             // Define o ID do professor.

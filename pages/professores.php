@@ -57,52 +57,95 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
 
     // --- AÇÃO: ADICIONAR NOVO PROFESSOR ---
+    // --- AÇÃO: ADICIONAR NOVO PROFESSOR ---
     if ($action === 'add') {
-        // Validações antes de ir para o banco.
+        
+        // --- INÍCIO DAS VALIDAÇÕES ---
+        $data_nascimento = $_POST['data_nascimento'] ?? '';
+        $data_contratacao = $_POST['data_contratacao'] ?? '';
+
         if (empty($_POST['cpf']) || !validarCPF($_POST['cpf'])) {
             $error = "O CPF informado é inválido.";
         } elseif (empty($_POST['senha']) || strlen($_POST['senha']) < 8) {
             $error = "A senha é obrigatória e deve ter no mínimo 8 caracteres.";
+        } elseif (empty($data_nascimento)) { 
+            $error = "A Data de Nascimento é obrigatória.";
+        } elseif (empty($data_contratacao)) { 
+            $error = "A Data de Contratação é obrigatória.";
         } else {
-            // Se as validações passaram, inicia a transação.
-            iniciar_transacao($conn);
+            // --- VALIDAÇÃO DAS DATAS ---
             try {
-                // 1. Criptografa a senha.
+                $hoje = new DateTime();
+                $hoje_sem_hora = new DateTime($hoje->format('Y-m-d')); // Pega só a data
+                
+                // 1. Valida Data de Nascimento
+                $data_nascimento_obj = new DateTime($data_nascimento);
+                $idade_minima = 18;
+                
+                if ($data_nascimento_obj > $hoje) {
+                    $error = "A data de nascimento não pode ser uma data no futuro.";
+                } else {
+                    $diferenca = $hoje->diff($data_nascimento_obj);
+                    $idade = $diferenca->y;
+                    if ($idade < $idade_minima) {
+                        $error = "O professor deve ter no mínimo {$idade_minima} anos. Idade informada: {$idade} anos.";
+                    }
+                }
+
+                // 2. Valida Data de Contratação (SÓ SE A DATA DE NASCIMENTO ESTIVER OK)
+                if (empty($error)) {
+                    $data_contratacao_obj = new DateTime($data_contratacao);
+                    if ($data_contratacao_obj > $hoje_sem_hora) {
+                         $error = "A data de contratação não pode ser no futuro.";
+                    }
+                }
+
+            } catch (Exception $e) {
+                $error = "Formato de Data de Nascimento ou Contratação inválido.";
+            }
+            // --- FIM DA VALIDAÇÃO DE DATAS ---
+        }
+        
+        // Se as validações (incluindo a de idade) passaram, $error estará vazio.
+        if (empty($error)) { 
+            
+            iniciar_transacao($conn);
+        
+            try {
+                // 1. Criptografa a senha
                 $hashedPassword = password_hash($_POST['senha'], PASSWORD_DEFAULT);
 
-                // 2. Insere na tabela 'usuarios'.
-$sql_usuario = "INSERT INTO usuarios (nome, email, senha, tipo, cpf, rg, cidade, endereco, complemento, data_nascimento, forcar_troca_senha)
-VALUES (?, ?, ?, 'professor', ?, ?, ?, ?, ?, , ?, 1)"; 
-executar_consulta($conn, $sql_usuario, [
-$_POST['nome'], $_POST['email'], $hashedPassword, $_POST['cpf'], $_POST['rg'],
- $_POST['cidade'], $_POST['endereco'], $_POST['complemento'],
- $_POST['data_nascimento']
-                    // Não precisa adicionar o '1' aqui, pois ele já está fixo no SQL
- ]);
+                // 2. Insere na tabela 'usuarios' (Versão corrigida com telefone)
+                $sql_usuario = "INSERT INTO usuarios (nome, email, senha, tipo, cpf, rg, cidade, endereco, complemento, data_nascimento, telefone, forcar_troca_senha)
+                VALUES (?, ?, ?, 'professor', ?, ?, ?, ?, ?, ?, ?, 1)";
+                
+                executar_consulta($conn, $sql_usuario, [
+                    $_POST['nome'], $_POST['email'], $hashedPassword, $_POST['cpf'], $_POST['rg'], 
+                    $_POST['cidade'], $_POST['endereco'], $_POST['complemento'], 
+                    $_POST['data_nascimento'], $_POST['telefone']
+                ]);
 
-                // Pega o ID do usuário que acabamos de criar.
+                // 3. Pega o ID
                 $usuario_id = $conn->insert_id;
 
-                // 3. Insere na tabela 'professores'.
+                // 4. Insere na tabela 'professores'
                 $sql_professor = "INSERT INTO professores (usuario_id, data_contratacao, formacao, instrumentos_leciona, biografia)
-                                  VALUES (?, ?, ?, ?, ?)";
+                                    VALUES (?, ?, ?, ?, ?)";
                 executar_consulta($conn, $sql_professor, [
-                    $usuario_id, $_POST['data_contratacao'], $_POST['formacao'],
+                    $usuario_id, $data_contratacao, $_POST['formacao'],
                     $_POST['instrumentos_leciona'], $_POST['biografia']
                 ]);
 
-                // Se tudo deu certo, confirma as alterações.
                 confirmar_transacao($conn);
                 $message = "Professor cadastrado com sucesso!";
 
             } catch (Exception $e) {
-                // Se algo deu errado, desfaz tudo.
                 reverter_transacao($conn);
                 $error = "Erro ao cadastrar professor: " . $e->getMessage();
             }
         }
-    }
-
+    
+    } 
     // --- AÇÃO: APAGAR UM PROFESSOR ---
     elseif ($action === 'delete') {
         $usuario_id = $_POST['usuario_id'] ?? null;
@@ -115,7 +158,7 @@ $_POST['nome'], $_POST['email'], $hashedPassword, $_POST['cpf'], $_POST['rg'],
         }
     }
 }
-
+    
 // --- LÓGICA PARA LISTAR OS PROFESSORES NA TABELA ---
 $sql_listar = "SELECT p.*, u.nome, u.email, u.created_at, u.ativo, u.cpf, u.rg, p.id as professor_id, u.id as usuario_id
                FROM professores p 
@@ -139,15 +182,15 @@ $professores = $resultado->fetch_all(MYSQLI_ASSOC);
         <div class="form-section">
             <h4> Dados Pessoais e de Acesso</h4>
             <div class="form-row">
-                <div class="form-group"><label for="nome">Nome Completo:</label><input  type="text" id="nome" name="nome" required value="<?php echo htmlspecialchars($_POST['nome'] ?? ''); ?>"></div>
-                <div class="form-group"><label for="email">Email:</label><input type="email" id="email" name="email" required value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>"></div>
+                <div class="form-group"><label for="nome">Nome Completo:</label><input   type="text" id="nome" name="nome"  value="<?php echo htmlspecialchars($_POST['nome'] ?? ''); ?>"required></div>
+                <div class="form-group"><label for="email">Email:</label><input  type="email" id="email" name="email"  value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>" required></div>
             </div>
 
             <div class="form-row">
                 <div class="form-group" style="flex: 1;">
                     <label for="senha">Senha (mín. 8 caracteres):</label>
                     <div style="display: flex; gap: 10px;">
-                        <input type="password" id="senha" name="senha" required minlength="8" style="flex-grow: 1;" readonly placeholder="Clique em 'Gerar' para criar a senha">
+                        <input type="password" id="senha" name="senha" minlength="8" style="flex-grow: 1;" readonly placeholder="Clique em 'Gerar' para criar a senha" required>
                         <button type="button" id="btnGerarSenha" class="btn btn-secondary">Gerar</button>
                     </div>
                 </div>
@@ -161,14 +204,14 @@ $professores = $resultado->fetch_all(MYSQLI_ASSOC);
             </div>
 
              <div class="form-row">
-                <div class="form-group"><label for="cpf">CPF:</label><input type="text" id="cpf" name="cpf" required maxlength="14" value="<?php echo htmlspecialchars($_POST['cpf'] ?? ''); ?>"></div>
-                <div class="form-group"><label for="rg">RG:</label><input type="text" id="rg" name="rg" value="<?php echo htmlspecialchars($_POST['rg'] ?? ''); ?>"></div>
+                <div class="form-group"><label for="cpf">CPF:</label><input required type="text" id="cpf" name="cpf" required maxlength="14" value="<?php echo htmlspecialchars($_POST['cpf'] ?? ''); ?>" required></div>
+                <div class="form-group"><label for="rg">RG:</label><input required type="text" id="rg" name="rg" value="<?php echo htmlspecialchars($_POST['rg'] ?? ''); ?>" required></div>
             </div>
 
             <div class="form-row">
                 <div class="form-group">
                     <label for="telefone">Telefone:</label>
-                    <input type="text" id="telefone" name="telefone" placeholder="(00) 00000-0000" value="<?php echo htmlspecialchars($_POST['telefone'] ?? ''); ?>">
+                    <input  minlenght="11" type="text" id="telefone" name="telefone" placeholder="(00) 00000-0000" value="<?php echo htmlspecialchars($_POST['telefone'] ?? ''); ?>" required>
                 </div>
             </div>
         </div>
@@ -177,9 +220,9 @@ $professores = $resultado->fetch_all(MYSQLI_ASSOC);
             <h4> Endereço</h4>
             <div class="form-row">
                 <div class="form-group"><label for="cidade">Cidade:</label><input type="text" id="cidade" name="cidade" value="<?php echo htmlspecialchars($_POST['cidade'] ?? ''); ?>"></div>
-                <div class="form-group"><label for="endereco">Endereço:</label><input type="text" id="endereco" name="endereco" placeholder="Rua, número" value="<?php echo htmlspecialchars($_POST['endereco'] ?? ''); ?>"></div>
+                <div class="form-group"><label for="endereco">Endereço:</label><input type="text" id="endereco" name="endereco" placeholder="Rua, número" value="<?php echo htmlspecialchars($_POST['endereco'] ?? ''); ?>" required></div>
             </div>
-            <div class="form-group"><label for="complemento">Complemento:</label><input type="text" id="complemento" name="complemento" placeholder="Apto, bloco, etc." value="<?php echo htmlspecialchars($_POST['complemento'] ?? ''); ?>"></div>
+            <div class="form-group"><label for="complemento">Complemento:</label><input type="text" id="complemento" name="complemento" placeholder="Apto, bloco, etc." value="<?php echo htmlspecialchars($_POST['complemento'] ?? ''); ?>" required></div>
         </div>
 
         <div class="form-section">
@@ -370,6 +413,7 @@ document.addEventListener('DOMContentLoaded', function() {
         altInput: true,
         altFormat: "d/m/Y",
         allowInput: true, // Permite digitação
+        maxDate: "today",
         
         // Conecta a máscara e o maxlength
         onReady: function(selectedDates, dateStr, instance) {
