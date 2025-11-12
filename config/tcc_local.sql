@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Tempo de geração: 12-Nov-2025 às 17:29
+-- Tempo de geração: 12-Nov-2025 às 19:05
 -- Versão do servidor: 9.1.0
 -- versão do PHP: 8.1.31
 
@@ -34,16 +34,23 @@ CREATE TABLE IF NOT EXISTS `alunos` (
   `matricula` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
   `nome_responsavel` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
   `telefone_responsavel` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
-  `email_responsavel` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `email_responsavel` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
   `instrumento` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
   `nivel_experiencia` enum('Iniciante','Básico','Intermediário','Avançado') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT 'Iniciante',
   `possui_instrumento` tinyint(1) DEFAULT NULL,
   `objetivos` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci,
-  `preferencia_horario` varchar(255) COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `preferencia_horario` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `matricula` (`matricula`),
   KEY `usuario_id` (`usuario_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Extraindo dados da tabela `alunos`
+--
+
+INSERT INTO `alunos` (`id`, `usuario_id`, `matricula`, `nome_responsavel`, `telefone_responsavel`, `email_responsavel`, `instrumento`, `nivel_experiencia`, `possui_instrumento`, `objetivos`, `preferencia_horario`) VALUES
+(1, 1, '20251', '', '', NULL, 'Piano', 'Iniciante', 1, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -70,7 +77,15 @@ CREATE TABLE IF NOT EXISTS `aulas_agendadas` (
   PRIMARY KEY (`id`),
   KEY `professor_id` (`professor_id`),
   KEY `aluno_id` (`aluno_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Extraindo dados da tabela `aulas_agendadas`
+--
+
+INSERT INTO `aulas_agendadas` (`id`, `professor_id`, `aluno_id`, `disciplina`, `data_aula`, `horario_inicio`, `horario_fim`, `status`, `presenca`, `observacoes`, `data_cancelamento`, `motivo_cancelamento`, `motivo_reagendamento`, `data_criacao`) VALUES
+(1, 2, 1, 'Guitarra', '2025-11-12', '13:00:00', '14:00:00', 'cancelado', 'justificada', '', '2025-11-12 16:03:49', 'Teste', NULL, NULL),
+(2, 1, 1, 'Guitarra', '2025-11-12', '13:00:00', '14:00:00', 'agendado', NULL, '', NULL, NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -91,7 +106,15 @@ CREATE TABLE IF NOT EXISTS `professores` (
   `biografia` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci,
   PRIMARY KEY (`id`),
   KEY `usuario_id` (`usuario_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Extraindo dados da tabela `professores`
+--
+
+INSERT INTO `professores` (`id`, `usuario_id`, `data_contratacao`, `formacao`, `instrumentos_leciona`, `niveis_leciona`, `generos_especialidade`, `horarios_disponiveis`, `biografia`) VALUES
+(1, 3, '0000-00-00', '', 'Violão, Guitarra', NULL, NULL, NULL, ''),
+(2, 4, NULL, NULL, 'Violão, Guitarra', NULL, NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -113,7 +136,16 @@ CREATE TABLE IF NOT EXISTS `solicitacoes_alteracao` (
   `data_resposta` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `usuario_id` (`usuario_id`)
-) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=MyISAM AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Extraindo dados da tabela `solicitacoes_alteracao`
+--
+
+INSERT INTO `solicitacoes_alteracao` (`id`, `usuario_id`, `tipo_usuario`, `campo_solicitado`, `valor_antigo`, `valor_novo`, `data_solicitacao`, `status`, `administrador_id`, `data_resposta`) VALUES
+(1, 1, 'aluno', 'Email', NULL, 'aluno@sistema.com', '2025-11-12 14:39:25', 'aprovado', 5, '2025-11-12 14:40:59'),
+(2, 3, 'professor', 'Email', NULL, 'a', '2025-11-12 14:40:49', 'aprovado', 5, '2025-11-12 14:41:14'),
+(3, 1, 'aluno', 'Nome Completo', NULL, 'a', '2025-11-12 14:43:16', 'pendente', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -141,7 +173,18 @@ CREATE TABLE IF NOT EXISTS `usuarios` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `email` (`email`),
   UNIQUE KEY `cpf` (`cpf`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Extraindo dados da tabela `usuarios`
+--
+
+INSERT INTO `usuarios` (`id`, `nome`, `email`, `senha`, `tipo`, `cpf`, `rg`, `data_nascimento`, `telefone`, `cidade`, `endereco`, `ativo`, `created_at`, `complemento`, `forcar_troca_senha`) VALUES
+(1, 'UsuarioTeste N2(Aluno)', 'aluno@sistema.com', '$2y$10$7ZYw6HjgszKXaB4eD1xOp.B9Bh6sbgoGAv58Th3MrDBUfrn/fwvce', 'aluno', '51772027047', '0252381', '2000-01-02', '', NULL, NULL, 1, '2025-11-12 17:34:58', NULL, 0),
+(2, 'UsuarioTeste N1 (Admin)', 'teste_admin_1762968952_1@bulk.com', '$2y$10$Tsv68y3wCS0W2ijHeHP.geIlegi6BXoQwfdppncmUeolq1eeHBLCS', 'admin', '37881018533', '6988605', NULL, NULL, NULL, NULL, 1, '2025-11-12 17:35:52', NULL, 0),
+(3, 'UsuarioTeste N1 (Professor)', 'prof@sistema.com', '$2y$10$KEofUxzgrscNZw43hclbJu8vfA11CGJ5V/oe.vXEwmkkQs5xMbuoK', 'professor', '25970029822', '7771802', NULL, NULL, '', '', 1, '2025-11-12 17:37:03', '', 0),
+(4, 'UsuarioTeste N1 (Professor)', 'teste_professor_1762969075_1@bulk.com', '$2y$10$.ZoI9EidFfNtIw/0lQ4S9elCZI2XsPm41UD1xppPFXtc59zEcnD.i', 'professor', '77407667261', '3679311', NULL, NULL, NULL, NULL, 1, '2025-11-12 17:37:55', NULL, 0),
+(5, 'UsuarioTeste N1 (Admin)', 'admin@sistema.com', '$2y$10$nZ8rXjPIFvGzBfuU7vn.xe2za17/uWH3QCf6ck/UJJctOVdYGSl1q', 'admin', '31743485551', '0616985', NULL, NULL, NULL, NULL, 1, '2025-11-12 17:38:14', NULL, 0);
 
 --
 -- Restrições para despejos de tabelas

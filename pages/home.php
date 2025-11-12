@@ -33,7 +33,8 @@ try {
     // Monta a consulta SQL de acordo com o tipo de usuário.
     if (isAdmin()) {
         // Admin vê tudo.
-        $sql_recent = "SELECT aa.data_aula, aa.horario_inicio, aa.disciplina, aa.status, u_aluno.nome AS aluno_nome, u_prof.nome AS professor_nome
+
+        $sql_recent = "SELECT aa.data_aula, aa.horario_inicio, aa.disciplina, aa.status, u_aluno.nome AS aluno_nome, u_prof.nome AS professor_nome, aa.observacoes
                        FROM aulas_agendadas aa
                        LEFT JOIN alunos al ON aa.aluno_id = al.id
                        LEFT JOIN usuarios u_aluno ON al.usuario_id = u_aluno.id
@@ -42,7 +43,8 @@ try {
                        ORDER BY aa.data_aula DESC, aa.horario_inicio DESC LIMIT 5";
     } elseif (isProfessor()) {
         // Professor vê as aulas dele.
-        $sql_recent = "SELECT aa.data_aula, aa.horario_inicio, aa.disciplina, aa.status, u_aluno.nome AS aluno_nome
+
+        $sql_recent = "SELECT aa.data_aula, aa.horario_inicio, aa.disciplina, aa.status, u_aluno.nome AS aluno_nome, aa.observacoes
                        FROM aulas_agendadas aa
                        LEFT JOIN alunos al ON aa.aluno_id = al.id
                        LEFT JOIN usuarios u_aluno ON al.usuario_id = u_aluno.id
@@ -51,7 +53,8 @@ try {
         $params[] = $user_id;
     } elseif (isAluno()) {
         // Aluno vê as aulas dele.
-        $sql_recent = "SELECT aa.data_aula, aa.horario_inicio, aa.disciplina, aa.status, u_prof.nome as professor_nome
+
+        $sql_recent = "SELECT aa.data_aula, aa.horario_inicio, aa.disciplina, aa.status, u_prof.nome as professor_nome, aa.observacoes
                        FROM aulas_agendadas aa
                        JOIN alunos al ON aa.aluno_id = al.id
                        LEFT JOIN professores p ON aa.professor_id = p.id
@@ -121,6 +124,7 @@ try {
                         <th>Disciplina</th>
                         <th>Status</th>
                         <?php if(!isProfessor()): ?><th>Professor</th><?php endif; ?>
+                        <th>Observações</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -142,6 +146,7 @@ try {
                             <?php if(!isProfessor()): ?>
                                 <td><?php echo htmlspecialchars($aula['professor_nome'] ?? 'N/A'); ?></td>
                             <?php endif; ?>
+                            <td><?php echo htmlspecialchars($aula['observacoes'] ?? 'N/A'); ?></td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>

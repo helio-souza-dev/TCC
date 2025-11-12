@@ -126,11 +126,11 @@ try {
         <div class="alert alert-error"> <?php echo htmlspecialchars($error); ?></div>
     <?php endif; ?>
 
-    <div class="mb-20" style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
+    <div class="alert alert-info mb-20" style="padding: 20px; border-radius: 8px; color: var(--theme-text-primary);">
         <p><strong>Aluno:</strong> <?php echo htmlspecialchars($aula['aluno_nome']); ?></p>
         <p><strong>Disciplina:</strong> <?php echo htmlspecialchars($aula['disciplina']); ?></p>
         <p><strong>Data Agendada:</strong> <?php echo date('d/m/Y', strtotime($aula['data_aula'])); ?> das <?php echo date('H:i', strtotime($aula['horario_inicio'])); ?> às <?php echo date('H:i', strtotime($aula['horario_fim'])); ?></p>
-        <p><strong>Status Atual:</strong> <span class="status-badge status-<?php echo $aula['status']; ?>"><?php echo ucfirst($aula['status']); ?></span></p>
+        <p style="margin-top: 10px;"><strong>Status Atual:</strong> <span class="status-badge status-<?php echo $aula['status']; ?>"><?php echo ucfirst($aula['status']); ?></span></p>
     </div>
 
     <div class="mb-20">
