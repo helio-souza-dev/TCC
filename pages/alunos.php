@@ -235,19 +235,32 @@ $alunos = $resultado->fetch_all(MYSQLI_ASSOC);
         <div class="form-section">
             <h4>Dados Musicais</h4>
             <div class="form-row">
+                <div class="form-row">
                 <div class="form-group">
-                    <label for="instrumento">Instrumento Principal:</label>
-                    <input type="text" id="instrumento" name="instrumento" placeholder="Ex: Violão" value="<?php echo htmlspecialchars($_POST['instrumento'] ?? ''); ?>">
-                </div>
-                <div class="form-group">
-                    <label for="nivel_experiencia">Nível de Experiência:</label>
-                    <select id="nivel_experiencia" name="nivel_experiencia">
-                        <option value="Iniciante" <?php echo ($_POST['nivel_experiencia'] ?? '') == 'Iniciante' ? 'selected' : ''; ?>>Iniciante</option>
-                        <option value="Básico" <?php echo ($_POST['nivel_experiencia'] ?? '') == 'Básico' ? 'selected' : ''; ?>>Básico</option>
-                        <option value="Intermediário" <?php echo ($_POST['nivel_experiencia'] ?? '') == 'Intermediário' ? 'selected' : ''; ?>>Intermediário</option>
-                        <option value="Avançado" <?php echo ($_POST['nivel_experiencia'] ?? '') == 'Avançado' ? 'selected' : ''; ?>>Avançado</option>
-                    </select>
-                </div>
+                   <label for="instrumento">Instrumento Principal:</label>
+                        <select id="instrumento" name="instrumento">
+                        <option value="" disabled <?php echo empty($_POST['instrumento']) ? 'selected' : ''; ?>>-- Selecione um instrumento --</option>
+                        <option value="Violão" <?php echo ($_POST['instrumento'] ?? '') == 'Violão' ? 'selected' : ''; ?>>Violão</option>
+                        <option value="Guitarra" <?php echo ($_POST['instrumento'] ?? '') == 'Guitarra' ? 'selected' : ''; ?>>Guitarra</option>
+                        <option value="Baixo" <?php echo ($_POST['instrumento'] ?? '') == 'Baixo' ? 'selected' : ''; ?>>Baixo</option>
+                        <option value="Bateria" <?php echo ($_POST['instrumento'] ?? '') == 'Bateria' ? 'selected' : ''; ?>>Bateria</option>
+                        <option value="Teclado" <?php echo ($_POST['instrumento'] ?? '') == 'Teclado' ? 'selected' : ''; ?>>Teclado</option>
+                        <option value="Piano" <?php echo ($_POST['instrumento'] ?? '') == 'Piano' ? 'selected' : ''; ?>>Piano</option>
+                        <option value="Canto" <?php echo ($_POST['instrumento'] ?? '') == 'Canto' ? 'selected' : ''; ?>>Canto</option>
+                        <option value="Ukulele" <?php echo ($_POST['instrumento'] ?? '') == 'Ukulele' ? 'selected' : ''; ?>>Ukulele</option>
+                        <option value="Outro" <?php echo ($_POST['instrumento'] ?? '') == 'Outro' ? 'selected' : ''; ?>>Outro (especificar nos objetivos)</option>
+</select>
+</div>
+<div class="form-group">
+<label for="nivel_experiencia">Nível de Experiência:</label>
+ <select id="nivel_experiencia" name="nivel_experiencia">
+<option value="Iniciante" <?php echo ($_POST['nivel_experiencia'] ?? '') == 'Iniciante' ? 'selected' : ''; ?>>Iniciante</option>
+<option value="Básico" <?php echo ($_POST['nivel_experiencia'] ?? '') == 'Básico' ? 'selected' : ''; ?>>Básico</option>
+<option value="Intermediário" <?php echo ($_POST['nivel_experiencia'] ?? '') == 'Intermediário' ? 'selected' : ''; ?>>Intermediário</option>
+<option value="Avançado" <?php echo ($_POST['nivel_experiencia'] ?? '') == 'Avançado' ? 'selected' : ''; ?>>Avançado</option>
+ </select>
+</div>
+</div>
             </div>
 
             <div class="form-row">
@@ -418,51 +431,48 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <script>
-    // 1. Pega os elementos que acabamos de criar no HTML
-    const botaoGerar = document.getElementById('btnGerarSenha');
-    const inputSenha = document.getElementById('senha');
+    // Função pura de JS para formatar data (DD/MM/AAAA)
+    function formatarDataInput(event) {
+        let input = event.target;
+        // Remove tudo que não for dígito
+        let valor = input.value.replace(/\D/g, '');
+        let tamanho = valor.length;
 
-    // 2. A sua função de gerar senha, "traduzida" para JavaScript
-    function gerarSenhaJS(tamanho = 8) {
-        const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-        const tamanhoStr = caracteres.length;
-        let strAleatorio = '';
-
-        // Em JS, usamos crypto.getRandomValues para segurança
-       // Linha Correta:
-const randomValues = new Uint32Array(tamanho);
-        window.crypto.getRandomValues(randomValues);
-
-        for (let i = 0; i < tamanho; i++) {
-            // Isso é o equivalente seguro de 'random_int'
-            const index = randomValues[i] % tamanhoStr;
-            strAleatorio += caracteres[index];
+        // Adiciona a primeira barra (DD/)
+        if (tamanho > 2) {
+            valor = valor.substring(0, 2) + '/' + valor.substring(2);
         }
-        return strAleatorio;
+        // Adiciona a segunda barra (DD/MM/)
+        if (tamanho > 4) {
+            // Limita aos 4 dígitos do ano (total de 10 caracteres: DD/MM/AAAA)
+            valor = valor.substring(0, 5) + '/' + valor.substring(5, 9); 
+        }
+        
+        // Atualiza o valor no campo
+        input.value = valor;
     }
 
-    // 3. Adiciona o "ouvinte" de clique no botão
-    botaoGerar.addEventListener('click', function() {
-        // Quando o botão for clicado:
-        // 1. Gera uma nova senha
-        const novaSenha = gerarSenhaJS(8); // Gera uma senha de 12 caracteres
-        
-        // 2. Coloca a senha gerada no campo de input
-        inputSenha.value = novaSenha;
-        
-        // 3. Muda o tipo para 'text' para o usuário ver a senha
-        inputSenha.type = 'text';
+    // Função para formatar CPF (000.000.000-00)
+    function formatarCPF(event) {
+        let input = event.target;
+        let value = input.value.replace(/\D/g, '');
+        value = value.replace(/(\d{3})(\d)/, '$1.$2');
+        value = value.replace(/(\d{3})(\d)/, '$1.$2');
+        value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+        input.value = value;
+    }
 
-        // 4. (NOVO) Desabilita o botão para que só possa ser gerada uma vez
-        botaoGerar.disabled = true;
-        botaoGerar.textContent = 'Gerada!'; // Muda o texto do botão
-    });
+    // Função para formatar RG (00.000.000-0)
+    function formatarRG(event) {
+        let input = event.target;
+        let value = input.value.replace(/\D/g, '');
+        value = value.replace(/^(\d{2})(\d)/, '$1.$2');
+        value = value.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
+        value = value.replace(/\.(\d{3})(\d)$/, '.$1-$2');
+        input.value = value;
+    }
 
-    // (O listener de 'input' foi removido, pois o campo é readonly)
-</script>
-
-<script>
-document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function() {
         
         // 1. Configura o seletor de DATA (em Português)
         flatpickr("#data_nascimento", {
@@ -478,9 +488,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 instance.altInput.addEventListener('input', formatarDataInput);
             }
         });
+
+        // 2. Adiciona a máscara de CPF
+        const cpfInput = document.getElementById('cpf');
+        if (cpfInput) {
+            cpfInput.setAttribute('maxlength', '14'); // 000.000.000-00
+            cpfInput.addEventListener('input', formatarCPF);
+        }
+
+        // 3. Adiciona a máscara de RG (movido para cá)
+        const rgInput = document.getElementById('rg');
+        if (rgInput) {
+            rgInput.setAttribute('maxlength', '12'); // 00.000.000-0
+            rgInput.addEventListener('input', formatarRG);
+        }
+        
+    });
 </script>
-
-
 
 <script>
 // NOVO SCRIPT PARA DATATABLES
@@ -495,18 +519,5 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     }
-});
-</script>
-
-
-<!--adicionar caracteres especiais do RG-->
-
-<script>
-document.getElementById('rg').addEventListener('input', function(e) {
-    let value = e.target.value.replace(/\D/g, '');
-  value = value.replace(/^(\d{2})(\d)/, '$1.$2');       // Adiciona o primeiro ponto
-  value = value.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3'); // Adiciona o segundo ponto
-  value = value.replace(/\.(\d{3})(\d)$/, '.$1-$2');    // Adiciona o hífen
-    e.target.value = value;
 });
 </script>
