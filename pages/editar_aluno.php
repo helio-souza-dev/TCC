@@ -54,7 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $sql_aluno = "UPDATE alunos SET matricula = ?, instrumento = ?, nivel_experiencia = ?, nome_responsavel = ?, telefone_responsavel = ?, email_responsavel = ?, possui_instrumento = ? WHERE id = ?";
             executar_consulta($conn, $sql_aluno, [
                 $_POST['matricula'], $_POST['instrumento'], $_POST['nivel_experiencia'],
-                $_POST['nome_responsavel'], $_POST['telefone_responsavel'], $_POST['email_responsavel'],
+                $_POST['nome_responsavel'], $_POST['telefone_responsavel'], $_POST['email_responsavel'] ?? null,
                 isset($_POST['possui_instrumento']) ? 1 : 0,
                 $aluno_id
             ]);

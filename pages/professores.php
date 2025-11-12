@@ -181,7 +181,21 @@ $professores = $resultado->fetch_all(MYSQLI_ASSOC);
             </div>
             </div>
             <div class="form-row">
-                <div class="form-group"><label for="instrumentos_leciona">Instrumentos que Leciona:</label><input type="text" id="instrumentos_leciona" name="instrumentos_leciona" required placeholder="Ex: Violão, Guitarra, Baixo" value="<?php echo htmlspecialchars($_POST['instrumentos_leciona'] ?? ''); ?>"></div>
+               <div class="form-group">
+    <label for="instrumentos_leciona">Instrumentos que Leciona:</label>
+    <select id="instrumentos_leciona" name="instrumentos_leciona" required>
+        <option value="" disabled <?php echo empty($_POST['instrumentos_leciona']) ? 'selected' : ''; ?>>-- Selecione um instrumento --</option>
+        <option value="Violão" <?php echo ($_POST['instrumentos_leciona'] ?? '') == 'Violão' ? 'selected' : ''; ?>>Violão</option>
+        <option value="Guitarra" <?php echo ($_POST['instrumentos_leciona'] ?? '') == 'Guitarra' ? 'selected' : ''; ?>>Guitarra</option>
+        <option value="Baixo" <?php echo ($_POST['instrumentos_leciona'] ?? '') == 'Baixo' ? 'selected' : ''; ?>>Baixo</option>
+        <option value="Bateria" <?php echo ($_POST['instrumentos_leciona'] ?? '') == 'Bateria' ? 'selected' : ''; ?>>Bateria</option>
+        <option value="Teclado" <?php echo ($_POST['instrumentos_leciona'] ?? '') == 'Teclado' ? 'selected' : ''; ?>>Teclado</option>
+        <option value="Piano" <?php echo ($_POST['instrumentos_leciona'] ?? '') == 'Piano' ? 'selected' : ''; ?>>Piano</option>
+        <option value="Canto" <?php echo ($_POST['instrumentos_leciona'] ?? '') == 'Canto' ? 'selected' : ''; ?>>Canto</option>
+        <option value="Ukulele" <?php echo ($_POST['instrumentos_leciona'] ?? '') == 'Ukulele' ? 'selected' : ''; ?>>Ukulele</option>
+        <option value="Outro" <?php echo ($_POST['instrumentos_leciona'] ?? '') == 'Outro' ? 'selected' : ''; ?>>Outro (especificar na biografia)</option>
+    </select>
+</div>
             </div>
             <div class="form-group">
                 <label for="biografia">Biografia (opcional):</label>

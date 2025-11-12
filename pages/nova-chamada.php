@@ -153,11 +153,20 @@ try {
         <?php endif; ?>
             
         <div class="form-group">
-            <label for="disciplina">Disciplina: <span style="color: red;">*</span></label>
-            <input type="text" id="disciplina" name="disciplina" required 
-                   value="<?php echo htmlspecialchars($_POST['disciplina'] ?? ''); ?>"
-                   placeholder="Ex: Violão, Flauta">
-        </div>
+    <label for="disciplina">Disciplina: <span style="color: red;">*</span></label>
+    <select id="disciplina" name="disciplina" required>
+        <option value="" disabled <?php echo empty($_POST['disciplina']) ? 'selected' : ''; ?>>-- Selecione uma disciplina --</option>
+        <option value="Violão" <?php echo ($_POST['disciplina'] ?? '') == 'Violão' ? 'selected' : ''; ?>>Violão</option>
+        <option value="Guitarra" <?php echo ($_POST['disciplina'] ?? '') == 'Guitarra' ? 'selected' : ''; ?>>Guitarra</option>
+        <option value="Baixo" <?php echo ($_POST['disciplina'] ?? '') == 'Baixo' ? 'selected' : ''; ?>>Baixo</option>
+        <option value="Bateria" <?php echo ($_POST['disciplina'] ?? '') == 'Bateria' ? 'selected' : ''; ?>>Bateria</option>
+        <option value="Teclado" <?php echo ($_POST['disciplina'] ?? '') == 'Teclado' ? 'selected' : ''; ?>>Teclado</option>
+        <option value="Piano" <?php echo ($_POST['disciplina'] ?? '') == 'Piano' ? 'selected' : ''; ?>>Piano</option>
+        <option value="Canto" <?php echo ($_POST['disciplina'] ?? '') == 'Canto' ? 'selected' : ''; ?>>Canto</option>
+        <option value="Ukulele" <?php echo ($_POST['disciplina'] ?? '') == 'Ukulele' ? 'selected' : ''; ?>>Ukulele</option>
+        <option value="Outro" <?php echo ($_POST['disciplina'] ?? '') == 'Outro' ? 'selected' : ''; ?>>Outro (especificar nas observações)</option>
+    </select>
+</div>
         
         <div class="form-row">
             <div class="form-group">
