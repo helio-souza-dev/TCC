@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1:3306
--- Tempo de geração: 12-Nov-2025 às 19:05
+-- Tempo de geração: 12-Nov-2025 às 20:33
 -- Versão do servidor: 9.1.0
 -- versão do PHP: 8.1.31
 
@@ -73,19 +73,22 @@ CREATE TABLE IF NOT EXISTS `aulas_agendadas` (
   `data_cancelamento` datetime DEFAULT NULL,
   `motivo_cancelamento` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
   `motivo_reagendamento` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `data_reagendamento` datetime DEFAULT NULL,
   `data_criacao` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `professor_id` (`professor_id`),
   KEY `aluno_id` (`aluno_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Extraindo dados da tabela `aulas_agendadas`
 --
 
-INSERT INTO `aulas_agendadas` (`id`, `professor_id`, `aluno_id`, `disciplina`, `data_aula`, `horario_inicio`, `horario_fim`, `status`, `presenca`, `observacoes`, `data_cancelamento`, `motivo_cancelamento`, `motivo_reagendamento`, `data_criacao`) VALUES
-(1, 2, 1, 'Guitarra', '2025-11-12', '13:00:00', '14:00:00', 'cancelado', 'justificada', '', '2025-11-12 16:03:49', 'Teste', NULL, NULL),
-(2, 1, 1, 'Guitarra', '2025-11-12', '13:00:00', '14:00:00', 'agendado', NULL, '', NULL, NULL, NULL, NULL);
+INSERT INTO `aulas_agendadas` (`id`, `professor_id`, `aluno_id`, `disciplina`, `data_aula`, `horario_inicio`, `horario_fim`, `status`, `presenca`, `observacoes`, `data_cancelamento`, `motivo_cancelamento`, `motivo_reagendamento`, `data_reagendamento`, `data_criacao`) VALUES
+(1, 2, 1, 'Guitarra', '2025-11-12', '13:00:00', '14:00:00', 'cancelado', 'justificada', '', '2025-11-12 16:03:49', 'Teste', NULL, NULL, NULL),
+(2, 1, 1, 'Guitarra', '2025-11-12', '13:00:00', '14:00:00', 'agendado', NULL, '', NULL, NULL, NULL, NULL, NULL),
+(3, 1, 1, 'Violão', '2025-11-12', '13:00:00', '12:00:00', 'agendado', NULL, '', NULL, NULL, NULL, NULL, NULL),
+(4, 1, 1, 'Violão', '2025-11-12', '14:00:00', '15:00:00', 'agendado', NULL, '', NULL, NULL, NULL, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -106,7 +109,7 @@ CREATE TABLE IF NOT EXISTS `professores` (
   `biografia` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci,
   PRIMARY KEY (`id`),
   KEY `usuario_id` (`usuario_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Extraindo dados da tabela `professores`
@@ -114,7 +117,8 @@ CREATE TABLE IF NOT EXISTS `professores` (
 
 INSERT INTO `professores` (`id`, `usuario_id`, `data_contratacao`, `formacao`, `instrumentos_leciona`, `niveis_leciona`, `generos_especialidade`, `horarios_disponiveis`, `biografia`) VALUES
 (1, 3, '0000-00-00', '', 'Violão, Guitarra', NULL, NULL, NULL, ''),
-(2, 4, NULL, NULL, 'Violão, Guitarra', NULL, NULL, NULL, NULL);
+(2, 4, NULL, NULL, 'Violão, Guitarra', NULL, NULL, NULL, NULL),
+(3, 6, '2025-11-12', 'sexo', 'Canto', NULL, NULL, NULL, 'a');
 
 -- --------------------------------------------------------
 
@@ -173,7 +177,7 @@ CREATE TABLE IF NOT EXISTS `usuarios` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `email` (`email`),
   UNIQUE KEY `cpf` (`cpf`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Extraindo dados da tabela `usuarios`
@@ -184,7 +188,8 @@ INSERT INTO `usuarios` (`id`, `nome`, `email`, `senha`, `tipo`, `cpf`, `rg`, `da
 (2, 'UsuarioTeste N1 (Admin)', 'teste_admin_1762968952_1@bulk.com', '$2y$10$Tsv68y3wCS0W2ijHeHP.geIlegi6BXoQwfdppncmUeolq1eeHBLCS', 'admin', '37881018533', '6988605', NULL, NULL, NULL, NULL, 1, '2025-11-12 17:35:52', NULL, 0),
 (3, 'UsuarioTeste N1 (Professor)', 'prof@sistema.com', '$2y$10$KEofUxzgrscNZw43hclbJu8vfA11CGJ5V/oe.vXEwmkkQs5xMbuoK', 'professor', '25970029822', '7771802', NULL, NULL, '', '', 1, '2025-11-12 17:37:03', '', 0),
 (4, 'UsuarioTeste N1 (Professor)', 'teste_professor_1762969075_1@bulk.com', '$2y$10$.ZoI9EidFfNtIw/0lQ4S9elCZI2XsPm41UD1xppPFXtc59zEcnD.i', 'professor', '77407667261', '3679311', NULL, NULL, NULL, NULL, 1, '2025-11-12 17:37:55', NULL, 0),
-(5, 'UsuarioTeste N1 (Admin)', 'admin@sistema.com', '$2y$10$nZ8rXjPIFvGzBfuU7vn.xe2za17/uWH3QCf6ck/UJJctOVdYGSl1q', 'admin', '31743485551', '0616985', NULL, NULL, NULL, NULL, 1, '2025-11-12 17:38:14', NULL, 0);
+(5, 'UsuarioTeste N1 (Admin)', 'admin@sistema.com', '$2y$10$nZ8rXjPIFvGzBfuU7vn.xe2za17/uWH3QCf6ck/UJJctOVdYGSl1q', 'admin', '31743485551', '0616985', NULL, NULL, NULL, NULL, 1, '2025-11-12 17:38:14', NULL, 0),
+(6, 'CLEDISON COSTA ALVE2', 'heliosol777@gmail.com', '$2y$10$9pMl2qwWT63gElC9eKpxHu1rLa6S15i2VT7fw825UYvHU82.7vcVa', 'professor', '277.966.738-92', '31.019.188-9', '2000-11-02', NULL, 'Poa', 'Rua Penapolis 627', 1, '2025-11-12 19:43:04', '77A', 1);
 
 --
 -- Restrições para despejos de tabelas
