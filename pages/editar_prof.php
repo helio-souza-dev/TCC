@@ -53,10 +53,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ]);
 
             // 2. Atualiza a tabela 'professores'.
-            $sql_prof = "UPDATE professores SET formacao=?, data_contratacao=?, instrumentos_leciona=?, valor_hora_aula=?, biografia=? WHERE id=?";
+            $sql_prof = "UPDATE professores SET formacao=?, data_contratacao=?, instrumentos_leciona=?, biografia=? WHERE id=?";
             executar_consulta($conn, $sql_prof, [
                 $_POST['formacao'], $_POST['data_contratacao'], $_POST['instrumentos_leciona'],
-                $_POST['valor_hora_aula'], $_POST['biografia'],
+                $_POST['biografia'],
                 $professor_id
             ]);
 
@@ -150,8 +150,6 @@ if ($professor_id_to_load) {
                 </div>
                  <div class="form-row">
                     <div class="form-group"><label for="instrumentos_leciona">Instrumentos que Leciona:</label><input type="text" id="instrumentos_leciona" name="instrumentos_leciona" value="<?php echo htmlspecialchars($professor['instrumentos_leciona'] ?? ''); ?>"></div>
-                    <div class="form-group"><label for="valor_hora_aula">Valor da Hora/Aula (R$):</label><input type="number" step="0.01" id="valor_hora_aula" name="valor_hora_aula" value="<?php echo htmlspecialchars($professor['valor_hora_aula'] ?? ''); ?>"></div>
-                </div>
                 <div class="form-group"><label for="biografia">Biografia:</label><textarea id="biografia" name="biografia" rows="3"><?php echo htmlspecialchars($professor['biografia'] ?? ''); ?></textarea></div>
             </div>
             

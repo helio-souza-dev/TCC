@@ -84,11 +84,11 @@ $_POST['nome'], $_POST['email'], $hashedPassword, $_POST['cpf'], $_POST['rg'],
                 $usuario_id = $conn->insert_id;
 
                 // 3. Insere na tabela 'professores'.
-                $sql_professor = "INSERT INTO professores (usuario_id, data_contratacao, formacao, instrumentos_leciona, valor_hora_aula, biografia)
-                                  VALUES (?, ?, ?, ?, ?, ?)";
+                $sql_professor = "INSERT INTO professores (usuario_id, data_contratacao, formacao, instrumentos_leciona, biografia)
+                                  VALUES (?, ?, ?, ?, ?, ?, ?)";
                 executar_consulta($conn, $sql_professor, [
                     $usuario_id, $_POST['data_contratacao'], $_POST['formacao'],
-                    $_POST['instrumentos_leciona'], $_POST['valor_hora_aula'], $_POST['biografia']
+                    $_POST['instrumentos_leciona'], $_POST['biografia']
                 ]);
 
                 // Se tudo deu certo, confirma as alterações.
@@ -182,7 +182,6 @@ $professores = $resultado->fetch_all(MYSQLI_ASSOC);
             </div>
             <div class="form-row">
                 <div class="form-group"><label for="instrumentos_leciona">Instrumentos que Leciona:</label><input type="text" id="instrumentos_leciona" name="instrumentos_leciona" required placeholder="Ex: Violão, Guitarra, Baixo" value="<?php echo htmlspecialchars($_POST['instrumentos_leciona'] ?? ''); ?>"></div>
-                <div class="form-group"><label for="valor_hora_aula">Valor da Hora/Aula (R$):</label><input type="number" step="0.01" id="valor_hora_aula" name="valor_hora_aula" placeholder="Ex: 75.50" value="<?php echo htmlspecialchars($_POST['valor_hora_aula'] ?? ''); ?>"></div>
             </div>
             <div class="form-group">
                 <label for="biografia">Biografia (opcional):</label>

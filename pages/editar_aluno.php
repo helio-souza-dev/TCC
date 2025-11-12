@@ -51,10 +51,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ]);
 
             // 2. Atualiza a tabela 'alunos' com os dados musicais.
-            $sql_aluno = "UPDATE alunos SET matricula = ?, instrumento = ?, nivel_experiencia = ?, nome_responsavel = ?, telefone_responsavel = ?, possui_instrumento = ? WHERE id = ?";
+            $sql_aluno = "UPDATE alunos SET matricula = ?, instrumento = ?, nivel_experiencia = ?, nome_responsavel = ?, telefone_responsavel = ?, email_responsavel = ?, possui_instrumento = ? WHERE id = ?";
             executar_consulta($conn, $sql_aluno, [
                 $_POST['matricula'], $_POST['instrumento'], $_POST['nivel_experiencia'],
-                $_POST['nome_responsavel'], $_POST['telefone_responsavel'],
+                $_POST['nome_responsavel'], $_POST['telefone_responsavel'], $_POST['email_responsavel'],
                 isset($_POST['possui_instrumento']) ? 1 : 0,
                 $aluno_id
             ]);
@@ -73,8 +73,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // --- LÓGICA 2: CARREGAR DADOS DO ALUNO PARA MOSTRAR NO FORMULÁRIO ---
 
-// Pega o ID do aluno da URL (quando o usuário clica em "Editar").
-$aluno_id_to_load = $_GET['aluno_id'] ?? null;
+// Pega o ID do aluno da URL (GET) ou do formulário (POST)
+$aluno_id_to_load = $_GET['aluno_id'] ?? $_POST['aluno_id'] ?? null;
 
 // Se um ID foi encontrado...
 if ($aluno_id_to_load) {
@@ -113,6 +113,7 @@ if ($aluno_id_to_load) {
             <form method="POST">
                 <input type="hidden" name="action" value="change_password">
                 <input type="hidden" name="usuario_id" value="<?php echo htmlspecialchars($student['usuario_id']); ?>">
+                   <input type="hidden" name="aluno_id" value="<?php echo htmlspecialchars($student['aluno_id']); ?>">
                 <div class="form-group">
     <label for="new_password">Nova Senha (mínimo 8 caracteres):</label>
     <div style="display: flex; gap: 10px;">

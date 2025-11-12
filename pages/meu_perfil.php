@@ -67,18 +67,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'updat
         if (isAluno()) {
             // Atualiza a tabela ALUNOS
             $aluno_id = $_POST['aluno_id'];
-            $sql_aluno = "UPDATE alunos SET instrumento = ?, nivel_experiencia = ?, tipo_aula_desejada = ?, preferencia_horario = ?, possui_instrumento = ?, objetivos = ? WHERE id = ?";
+            $sql_aluno = "UPDATE alunos SET instrumento = ?, nivel_experiencia = ?, preferencia_horario = ?, possui_instrumento = ?, objetivos = ? WHERE id = ?";
             executar_consulta($conn, $sql_aluno, [
-                $_POST['instrumento'], $_POST['nivel_experiencia'], $_POST['tipo_aula_desejada'], 
+                $_POST['instrumento'], $_POST['nivel_experiencia'],
                 $_POST['preferencia_horario'], isset($_POST['possui_instrumento']) ? 1 : 0, $_POST['objetivos'], $aluno_id
             ]);
             
         } elseif (isProfessor()) {
             // Atualiza a tabela PROFESSORES
             $professor_id = $_POST['professor_id'];
-            $sql_prof = "UPDATE professores SET formacao = ?, instrumentos_leciona = ?, valor_hora_aula = ?, biografia = ? WHERE id = ?";
+            $sql_prof = "UPDATE professores SET formacao = ?, instrumentos_leciona = ?, biografia = ? WHERE id = ?";
             executar_consulta($conn, $sql_prof, [
-                $_POST['formacao'], $_POST['instrumentos_leciona'], $_POST['valor_hora_aula'], $_POST['biografia'], $professor_id
+                $_POST['formacao'], $_POST['instrumentos_leciona'], $_POST['biografia'], $professor_id
             ]);
         }
         
@@ -218,7 +218,6 @@ try {
             </div>
              <div class="form-row">
                 <div class="form-group"><label>Instrumentos:</label><input type="text" name="instrumentos_leciona" value="<?php echo htmlspecialchars($userData['instrumentos_leciona'] ?? ''); ?>"></div>
-                <div class="form-group"><label>Valor Hora/Aula (R$):</label><input type="text" name="valor_hora_aula" value="<?php echo htmlspecialchars($userData['valor_hora_aula'] ?? ''); ?>"></div>
             </div>
             <div class="form-group"><label>Biografia:</label><textarea name="biografia" rows="3"><?php echo htmlspecialchars($userData['biografia'] ?? ''); ?></textarea></div>
         </div>

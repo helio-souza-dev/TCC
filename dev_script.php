@@ -39,6 +39,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $success_count = 0;
             
+            // Variáveis para guardar o primeiro usuário
+            $first_user_email = '';
+            $first_user_pass = '';
+            
             iniciar_transacao($conn);
 
             try {
@@ -47,12 +51,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $timestamp = time();
                     $nome = "UsuarioTeste N" . $i . " (" . ucfirst($tipo) . ")";
                     $email = "teste_" . strtolower($tipo) . "_" . $timestamp . "_" . $i . "@bulk.com";
-                    $password = generateRandomPassword(10);
+                    $password = generateRandomPassword(10); // Senha em texto plano
                     $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-                    // Geração simplificada de CPF/RG para teste (não é um CPF/RG válido)
                     $cpf = str_pad(mt_rand(1, 999999999), 9, '0', STR_PAD_LEFT) . str_pad(mt_rand(0, 99), 2, '0', STR_PAD_LEFT);
                     $rg = str_pad(mt_rand(1, 9999999), 7, '0', STR_PAD_LEFT);
 
+                    if ($i === 1) {
+                        $first_user_email = $email;
+                        $first_user_pass = $password; // Guarda a senha em texto plano
+                    }
 
                     // 1. Insere na tabela 'usuarios'.
                     $sql_usuario = "INSERT INTO usuarios (nome, email, senha, tipo, cpf, rg, forcar_troca_senha)
@@ -66,21 +73,84 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $sql_aluno = "INSERT INTO alunos (usuario_id, matricula, instrumento) VALUES (?, ?, ?)";
                         executar_consulta($conn, $sql_aluno, [$userId, $matricula, 'Piano']);
                     } elseif ($tipo === 'professor') {
-                         $sql_prof = "INSERT INTO professores (usuario_id, instrumentos_leciona, valor_hora_aula) VALUES (?, ?, ?)";
-                         executar_consulta($conn, $sql_prof, [$userId, 'Violão, Guitarra', 60.00]);
+                         $sql_prof = "INSERT INTO professores (usuario_id, instrumentos_leciona) VALUES (?, ?)";
+                         executar_consulta($conn, $sql_prof, [$userId, 'Violão, Guitarra']);
                     }
                     
                     $success_count++;
                 }
 
                 confirmar_transacao($conn);
+                
                 $message = "$success_count usuários do tipo '$tipo' criados para teste de capacidade!";
+                
+                if (!empty($first_user_email)) {
+                    $message .= "<br><br><strong style='color: #0056b3;'>Use este usuário para fazer login:</strong>";
+                    $message .= "<br><strong>Email:</strong> " . htmlspecialchars($first_user_email);
+                    $message .= "<br><strong>Senha:</strong> " . htmlspecialchars($first_user_pass);
+                }
+                
             } catch (Exception $e) {
                 reverter_transacao($conn);
                 $error = 'Erro ao gerar usuários em massa: ' . $e->getMessage();
             }
+        
+        // --- NOVA AÇÃO: EDITAR LOGIN DE ADMIN ---
+        } elseif ($action === 'edit_admin') {
+            $admin_email_lookup = $_POST['admin_email_lookup'] ?? '';
+            $new_email = $_POST['new_email'] ?? '';
+            $new_password = $_POST['new_password'] ?? '';
+
+            if (empty($admin_email_lookup)) {
+                throw new Exception("O 'Email do Admin a ser editado' é obrigatório.");
+            }
+            if (empty($new_email) && empty($new_password)) {
+                throw new Exception("Você deve fornecer um novo email ou uma nova senha.");
+            }
+
+            // 1. Encontrar o admin
+            $sql_find = "SELECT id FROM usuarios WHERE email = ? AND tipo = 'admin' LIMIT 1";
+            $stmt_find = executar_consulta($conn, $sql_find, [$admin_email_lookup]);
+            
+            if (!$stmt_find) {
+                 throw new Exception("Erro ao preparar a consulta para encontrar o admin.");
+            }
+            
+            $admin = $stmt_find->get_result()->fetch_assoc();
+            
+            if (!$admin) {
+                throw new Exception("Admin com o email '" . htmlspecialchars($admin_email_lookup) . "' não foi encontrado.");
+            }
+            $admin_id = $admin['id'];
+            
+            // 2. Montar o UPDATE dinâmico
+            $sql_parts = [];
+            $params = [];
+            
+            if (!empty($new_email)) {
+                $sql_parts[] = "email = ?";
+                $params[] = $new_email;
+            }
+            
+            if (!empty($new_password)) {
+                if (strlen($new_password) < 8) {
+                    throw new Exception("A nova senha deve ter no mínimo 8 caracteres.");
+                }
+                $hashedPassword = password_hash($new_password, PASSWORD_DEFAULT);
+                $sql_parts[] = "senha = ?";
+                $sql_parts[] = "forcar_troca_senha = 0"; // Reseta a flag
+                $params[] = $hashedPassword;
+            }
+            
+            // Prepara o SQL final
+            $sql = "UPDATE usuarios SET " . implode(", ", $sql_parts) . " WHERE id = ?";
+            $params[] = $admin_id; // Adiciona o ID ao final para o WHERE
+            
+            // Executa a consulta
+            executar_consulta($conn, $sql, $params);
+            $message = "Login do admin (ID: $admin_id) atualizado com sucesso!";
         }
-        // Se a action não for 'generate_bulk', ignora (removendo as outras lógicas)
+        // --- FIM DA NOVA AÇÃO ---
 
     } catch (Exception $e) {
         if (isset($conn) && $conn->inTransaction()) {
@@ -89,35 +159,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'Erro: ' . $e->getMessage();
     }
 }
-
-// O restante do script para listar usuários (que você pediu para remover) foi excluído.
-// Mantendo apenas o HTML mínimo para a ferramenta de teste.
 ?>
 
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Dev Tool: Gerar Usuários de Teste</title>
+    <title>Dev Tool: Gerar e Editar Usuários</title>
     <style>
         body { font-family: sans-serif; padding: 20px; line-height: 1.6; background-color: #f4f4f4; color: #333; }
         .container { max-width: 800px; margin: 20px auto; background: white; padding: 20px 30px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         h2, h3 { text-align: center; color: #333; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 20px; }
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-weight: bold; }
-        input[type="number"], select { width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
-        button { background-color: #28a745; color: white; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; width: 100%; font-size: 16px; transition: background-color 0.2s; }
-        button:hover { background-color: #218838; }
+        input[type="number"], input[type="text"], input[type="password"], input[type="email"], select {
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button { padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; width: 100%; font-size: 16px; transition: background-color 0.2s; color: white; }
+        
+        /* Botão Verde para Gerar */
+        .btn-generate { background-color: #28a745; }
+        .btn-generate:hover { background-color: #218838; }
+        
+        /* Botão Azul para Editar */
+        .btn-edit { background-color: #007bff; }
+        .btn-edit:hover { background-color: #0056b3; }
+        
         .alert { padding: 15px; margin-bottom: 20px; border-radius: 4px; }
         .alert-success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
         .alert-error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        hr { border: 0; border-top: 1px solid #eee; margin: 30px 0; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2> Ferramenta de Geração de Usuários de Teste</h2>
+        <h2> Ferramentas de Desenvolvimento</h2>
 
-        <?php if ($message): ?><div class="alert alert-success"><?php echo $message; ?></div><?php endif; ?>
+        <?php if ($message): ?><div class="alert alert-success"><?php echo $message; // A mensagem de sucesso agora contém a senha ?></div><?php endif; ?>
         <?php if ($error): ?><div class="alert alert-error"><?php echo $error; ?></div><?php endif; ?>
 
         <h3> Gerar Usuários para Teste de Capacidade</h3>
@@ -135,8 +217,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <option value="admin">Administrador</option>
                 </select>
             </div>
-            <button type="submit">Gerar Usuários de Teste</button>
+            <button type="submit" class="btn-generate">Gerar Usuários de Teste</button>
         </form>
-    </div>
+
+        <hr>
+        <h3> Editar Login de Admin</h3>
+        <form action="dev_script.php" method="POST">
+            <input type="hidden" name="action" value="edit_admin">
+            <div class="form-group">
+                <label for="admin_email_lookup">Email do Admin a ser editado:</label>
+                <input type="email" id="admin_email_lookup" name="admin_email_lookup" required placeholder="admin_teste@email.com">
+            </div>
+            <div class="form-group">
+                <label for="new_email">Novo Email (Opcional):</slabel>
+                <input type="email" id="new_email" name="new_email" placeholder="Deixe em branco para não alterar">
+            </div>
+            <div class="form-group">
+                <label for="new_password">Nova Senha (Opcional, mín. 8 caracteres):</label>
+                <input type="text" id="new_password" name="new_password" placeholder="Deixe em branco para não alterar">
+            </div>
+            <button type="submit" class="btn-edit">Salvar Alterações do Admin</button>
+        </form>
+        </div>
 </body>
 </html>

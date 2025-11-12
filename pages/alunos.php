@@ -93,12 +93,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $usuario_id = $conn->insert_id;
 
                 // 3. Insere na tabela 'alunos', usando o ID do usuário.
-                $sql_aluno = "INSERT INTO alunos (usuario_id, matricula, nome_responsavel, telefone_responsavel, instrumento, nivel_experiencia, tipo_aula_desejada, preferencia_horario, possui_instrumento, objetivos)
+                // CORREÇÃO: Removido 'preferencia_horario', readicionado 'tipo_aula_desejada'
+                $sql_aluno = "INSERT INTO alunos (usuario_id, matricula, nome_responsavel, telefone_responsavel, email_responsavel, instrumento, nivel_experiencia, tipo_aula_desejada, possui_instrumento, objetivos)
                                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
                 $stmt_aluno = executar_consulta($conn, $sql_aluno, [
                     $usuario_id, date('Y') . $usuario_id, // Cria uma matrícula simples
-                    $_POST['nome_responsavel'], $_POST['telefone_responsavel'], $_POST['instrumento'],
-                    $_POST['nivel_experiencia'], $_POST['tipo_aula_desejada'], $_POST['preferencia_horario'],
+                    $_POST['nome_responsavel'], $_POST['telefone_responsavel'], $_POST['email_responsavel'], $_POST['instrumento'],
+                    $_POST['nivel_experiencia'], $_POST['tipo_aula_desejada'], // Corrigido
                     isset($_POST['possui_instrumento']) ? 1 : 0, $_POST['objetivos']
                 ]);
 
@@ -134,7 +135,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // --- LÓGICA PARA LISTAR OS ALUNOS NA TABELA ---
 
 // Escreve o comando SQL para buscar todos os alunos e juntar com seus dados da tabela de usuários.
-$sql_listar = "SELECT a.*, u.nome, u.email, u.created_at FROM alunos a JOIN usuarios u ON a.usuario_id = u.id ORDER BY u.nome ASC";
+$sql_listar = "SELECT a.*, u.nome, u.email, u.created_at, u.id as usuario_id FROM alunos a JOIN usuarios u ON a.usuario_id = u.id ORDER BY u.nome ASC";
 
 // Executa a consulta diretamente, pois não há parâmetros do usuário aqui.
 $resultado = $conn->query($sql_listar);
@@ -198,7 +199,7 @@ $alunos = $resultado->fetch_all(MYSQLI_ASSOC);
                 <label for="data_nascimento">Data de Nascimento: <span style="color: red;">*</span></label>
                 <input type="text" id="data_nascimento" name="data_nascimento" required 
                        placeholder="Selecione uma data"
-                       value="<?php echo htmlspecialchars($_POST['data_contratacao'] ?? date('Y-m-d')); ?>">
+                       value="<?php echo htmlspecialchars($_POST['data_nascimento'] ?? ''); ?>"> <!-- Corrigido: 'data_nascimento' e não 'data_contratacao' -->
             </div>
     <!--Telefone-->
             <div class="form-row">
@@ -234,43 +235,46 @@ $alunos = $resultado->fetch_all(MYSQLI_ASSOC);
 
         <div class="form-section">
             <h4>Dados Musicais</h4>
+            
+            <!-- Linha de Instrumento e Nível (CORRIGIDA) -->
             <div class="form-row">
-                <div class="form-row">
                 <div class="form-group">
                    <label for="instrumento">Instrumento Principal:</label>
-                        <select id="instrumento" name="instrumento">
-                        <option value="" disabled <?php echo empty($_POST['instrumento']) ? 'selected' : ''; ?>>-- Selecione um instrumento --</option>
-                        <option value="Violão" <?php echo ($_POST['instrumento'] ?? '') == 'Violão' ? 'selected' : ''; ?>>Violão</option>
-                        <option value="Guitarra" <?php echo ($_POST['instrumento'] ?? '') == 'Guitarra' ? 'selected' : ''; ?>>Guitarra</option>
-                        <option value="Baixo" <?php echo ($_POST['instrumento'] ?? '') == 'Baixo' ? 'selected' : ''; ?>>Baixo</option>
-                        <option value="Bateria" <?php echo ($_POST['instrumento'] ?? '') == 'Bateria' ? 'selected' : ''; ?>>Bateria</option>
-                        <option value="Teclado" <?php echo ($_POST['instrumento'] ?? '') == 'Teclado' ? 'selected' : ''; ?>>Teclado</option>
-                        <option value="Piano" <?php echo ($_POST['instrumento'] ?? '') == 'Piano' ? 'selected' : ''; ?>>Piano</option>
-                        <option value="Canto" <?php echo ($_POST['instrumento'] ?? '') == 'Canto' ? 'selected' : ''; ?>>Canto</option>
-                        <option value="Ukulele" <?php echo ($_POST['instrumento'] ?? '') == 'Ukulele' ? 'selected' : ''; ?>>Ukulele</option>
-                        <option value="Outro" <?php echo ($_POST['instrumento'] ?? '') == 'Outro' ? 'selected' : ''; ?>>Outro (especificar nos objetivos)</option>
-</select>
-</div>
-<div class="form-group">
-<label for="nivel_experiencia">Nível de Experiência:</label>
- <select id="nivel_experiencia" name="nivel_experiencia">
-<option value="Iniciante" <?php echo ($_POST['nivel_experiencia'] ?? '') == 'Iniciante' ? 'selected' : ''; ?>>Iniciante</option>
-<option value="Básico" <?php echo ($_POST['nivel_experiencia'] ?? '') == 'Básico' ? 'selected' : ''; ?>>Básico</option>
-<option value="Intermediário" <?php echo ($_POST['nivel_experiencia'] ?? '') == 'Intermediário' ? 'selected' : ''; ?>>Intermediário</option>
-<option value="Avançado" <?php echo ($_POST['nivel_experiencia'] ?? '') == 'Avançado' ? 'selected' : ''; ?>>Avançado</option>
- </select>
-</div>
-</div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label for="tipo_aula_desejada">Tipo de Aula Desejada:</label>
-                    <input type="text" id="tipo_aula_desejada" name="tipo_aula_desejada" placeholder="Ex: Aula em grupo, individual" value="<?php echo htmlspecialchars($_POST['tipo_aula_desejada'] ?? ''); ?>">
+                       <select id="instrumento" name="instrumento" required> <!-- Adicionado 'required' -->
+                       <option value="" disabled <?php echo empty($_POST['instrumento']) ? 'selected' : ''; ?>>-- Selecione um instrumento --</option>
+                       <option value="Violão" <?php echo ($_POST['instrumento'] ?? '') == 'Violão' ? 'selected' : ''; ?>>Violão</option>
+                       <option value="Guitarra" <?php echo ($_POST['instrumento'] ?? '') == 'Guitarra' ? 'selected' : ''; ?>>Guitarra</option>
+                       <option value="Baixo" <?php echo ($_POST['instrumento'] ?? '') == 'Baixo' ? 'selected' : ''; ?>>Baixo</option>
+                       <option value="Bateria" <?php echo ($_POST['instrumento'] ?? '') == 'Bateria' ? 'selected' : ''; ?>>Bateria</option>
+                       <option value="Teclado" <?php echo ($_POST['instrumento'] ?? '') == 'Teclado' ? 'selected' : ''; ?>>Teclado</option>
+                       <option value="Piano" <?php echo ($_POST['instrumento'] ?? '') == 'Piano' ? 'selected' : ''; ?>>Piano</option>
+                       <option value="Canto" <?php echo ($_POST['instrumento'] ?? '') == 'Canto' ? 'selected' : ''; ?>>Canto</option>
+                       <option value="Ukulele" <?php echo ($_POST['instrumento'] ?? '') == 'Ukulele' ? 'selected' : ''; ?>>Ukulele</option>
+                       <option value="Outro" <?php echo ($_POST['instrumento'] ?? '') == 'Outro' ? 'selected' : ''; ?>>Outro (especificar nos objetivos)</option>
+                    </select>
                 </div>
                 <div class="form-group">
+                    <label for="nivel_experiencia">Nível de Experiência:</label>
+                     <select id="nivel_experiencia" name="nivel_experiencia">
+                        <option value="Iniciante" <?php echo ($_POST['nivel_experiencia'] ?? '') == 'Iniciante' ? 'selected' : ''; ?>>Iniciante</option>
+                        <option value="Básico" <?php echo ($_POST['nivel_experiencia'] ?? '') == 'Básico' ? 'selected' : ''; ?>>Básico</option>
+                        <option value="Intermediário" <?php echo ($_POST['nivel_experiencia'] ?? '') == 'Intermediário' ? 'selected' : ''; ?>>Intermediário</option>
+                        <option value="Avançado" <?php echo ($_POST['nivel_experiencia'] ?? '') == 'Avançado' ? 'selected' : ''; ?>>Avançado</option>
+                     </select>
+                </div>
+            </div>
+
+            <!-- Linha de Tipo de Aula (CORRIGIDA) -->
+            <div class="form-row">
+                <div class="form-group">
                     <label for="preferencia_horario">Preferência de Horário:</label>
-                    <input type="text" id="preferencia_horario" name="preferencia_horario" placeholder="Ex: Manhã, Sábados" value="<?php echo htmlspecialchars($_POST['preferencia_horario'] ?? ''); ?>">
+                    <!-- MODIFICADO DE INPUT PARA SELECT -->
+                    <select id="preferencia_horario" name="preferencia_horario">
+                        <option value="" disabled <?php echo empty($_POST['preferencia_horario']) ? 'selected' : ''; ?>>-- Selecione o tipo de aula --</option>
+                        <option value="manha" <?php echo ($_POST['preferencia_horario'] ?? '') == 'manha' ? 'selected' : ''; ?>>Manhã</option>
+                        <option value="tarde" <?php echo ($_POST['preferencia_horario'] ?? '') == 'tarde' ? 'selected' : ''; ?>>Tarde</option>
+                        <option value="noite" <?php echo ($_POST['preferencia_horario'] ?? '') == 'noite' ? 'selected' : ''; ?>>Noite</option>
+                    </select>
                 </div>
             </div>
 
@@ -303,16 +307,25 @@ $alunos = $resultado->fetch_all(MYSQLI_ASSOC);
         <div id="responsavel-fields" style="display: none;">
             <div class="form-section">
                 <h4> Dados do Responsável (Obrigatório para menores de 18 anos)</h4>
+                
                 <div class="form-row">
                     <div class="form-group">
                         <label for="nome_responsavel">Nome Completo do Responsável:</label>
                         <input type="text" id="nome_responsavel" name="nome_responsavel" value="<?php echo htmlspecialchars($_POST['nome_responsavel'] ?? ''); ?>">
                     </div>
+                </div>
+
+                <div class="form-row">
                     <div class="form-group">
                         <label for="telefone_responsavel">Telefone do Responsável:</label>
                         <input type="text" id="telefone_responsavel" name="telefone_responsavel" value="<?php echo htmlspecialchars($_POST['telefone_responsavel'] ?? ''); ?>">
                     </div>
+                    <div class="form-group">
+                        <label for="email_responsavel">Email do Responsável:</label>
+                        <input type="email" id="email_responsavel" name="email_responsavel" value="<?php echo htmlspecialchars($_POST['email_responsavel'] ?? ''); ?>" placeholder="email@responsavel.com">
+                    </div>
                 </div>
+
             </div>
         </div>
         
@@ -356,6 +369,9 @@ $alunos = $resultado->fetch_all(MYSQLI_ASSOC);
                                     <?php if (!empty($aluno['telefone_responsavel'])): ?>
                                         <br><small> <?php echo htmlspecialchars($aluno['telefone_responsavel']); ?></small>
                                     <?php endif; ?>
+                                    <?php if (!empty($aluno['email_responsavel'])): // ADICIONADO ?>
+                                        <br><small> <?php echo htmlspecialchars($aluno['email_responsavel']); ?></small>
+                                    <?php endif; // FIM ADICIONADO ?>
                                 <?php else: ?>
                                     -
                                 <?php endif; ?>
@@ -397,7 +413,23 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        const dataNasc = new Date(dataNascimentoInput.value);
+        // Tenta criar a data a partir do formato YYYY-MM-DD
+        let dataNasc;
+        if (dataNascimentoInput.value.includes('/')) {
+             // Se o usuário digitou (DD/MM/AAAA), o flatpickr ainda não converteu
+             // Precisamos inverter antes de checar
+            const partes = dataNascimentoInput.value.split('/');
+            if (partes.length === 3) {
+                 dataNasc = new Date(partes[2], partes[1] - 1, partes[0]);
+            } else {
+                 return; // Formato inválido
+            }
+        } else {
+             dataNasc = new Date(dataNascimentoInput.value);
+        }
+
+        if (isNaN(dataNasc.getTime())) return; // Data inválida
+
         const hoje = new Date();
         let idade = hoje.getFullYear() - dataNasc.getFullYear();
         const m = hoje.getMonth() - dataNasc.getMonth();
@@ -414,7 +446,14 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    // Adiciona o 'change' para quando o usuário USA o calendário flatpickr
+    // (O flatpickr dispara 'change' quando uma data é selecionada)
     dataNascimentoInput.addEventListener('change', checkAge);
+    
+    // Adiciona o 'input' para quando o usuário ESTÁ DIGITANDO
+    // (Precisamos pegar o altInput que o flatpickr cria)
+    // Vamos fazer isso dentro do onReady do flatpickr no outro script
+    
     checkAge(); // Executa ao carregar a página para o caso de o formulário ser recarregado com dados
     
     const deleteButtons = document.querySelectorAll('.delete-btn');
@@ -450,6 +489,10 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Atualiza o valor no campo
         input.value = valor;
+        
+        // Dispara manualmente um evento 'change' no input original (o escondido)
+        // para que o checkAge() seja acionado enquanto digita
+        // Isso é complexo, vamos simplificar... O checkAge() será chamado no 'blur' (quando sair do campo)
     }
 
     // Função para formatar CPF (000.000.000-00)
@@ -471,6 +514,16 @@ document.addEventListener('DOMContentLoaded', function() {
         value = value.replace(/\.(\d{3})(\d)$/, '.$1-$2');
         input.value = value;
     }
+    
+    // Função para formatar Telefone ( (00) 00000-0000 )
+    function formatarTelefone(event) {
+        let input = event.target;
+        let value = input.value.replace(/\D/g, '');
+        value = value.replace(/^(\d{2})(\d)/g, '($1) $2');
+        value = value.replace(/(\d{5})(\d)/, '$1-$2');
+        input.setAttribute('maxlength', '15'); // (00) 00000-0000
+        input.value = value;
+    }
 
     document.addEventListener('DOMContentLoaded', function() {
         
@@ -480,12 +533,27 @@ document.addEventListener('DOMContentLoaded', function() {
             dateFormat: "Y-m-d", // Formato que o banco de dados entende
             altInput: true, // Mostra um formato amigável para o usuário
             altFormat: "d/m/Y", // Formato amigável
-            allowInput: true, // <-- Corrigido (era true.)
+            allowInput: true,
             
-            // <-- Conecta a máscara e o maxlength
+            // Conecta a máscara e o maxlength
             onReady: function(selectedDates, dateStr, instance) {
                 instance.altInput.setAttribute('maxlength', '10');
                 instance.altInput.addEventListener('input', formatarDataInput);
+                
+                // Pega o input de data visível
+                const dataInputVisivel = instance.altInput;
+                
+                // Adiciona o 'checkAge' para quando o usuário TERMINAR de digitar (blur)
+                // e para quando ele selecionar uma data no calendário (onChange)
+                instance.set('onChange', function() {
+                    document.getElementById('data_nascimento').dispatchEvent(new Event('change'));
+                });
+                
+                dataInputVisivel.addEventListener('blur', function() {
+                    // Quando o usuário sai do campo, o flatpickr formata o valor
+                    // e nós disparamos o 'change' no campo original
+                    document.getElementById('data_nascimento').dispatchEvent(new Event('change'));
+                });
             }
         });
 
@@ -496,13 +564,24 @@ document.addEventListener('DOMContentLoaded', function() {
             cpfInput.addEventListener('input', formatarCPF);
         }
 
-        // 3. Adiciona a máscara de RG (movido para cá)
+        // 3. Adiciona a máscara de RG
         const rgInput = document.getElementById('rg');
         if (rgInput) {
             rgInput.setAttribute('maxlength', '12'); // 00.000.000-0
             rgInput.addEventListener('input', formatarRG);
         }
         
+        // 4. Adiciona a máscara de Telefone (Aluno)
+        const telInput = document.getElementById('telefone');
+        if (telInput) {
+            telInput.addEventListener('input', formatarTelefone);
+        }
+        
+        // 5. Adiciona a máscara de Telefone (Responsável)
+        const telResponsavelInput = document.getElementById('telefone_responsavel');
+        if (telResponsavelInput) {
+            telResponsavelInput.addEventListener('input', formatarTelefone);
+        }
     });
 </script>
 
@@ -520,4 +599,47 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+</script>
+
+<script>
+    // 1. Pega os elementos que acabamos de criar no HTML
+    const botaoGerar = document.getElementById('btnGerarSenha');
+    const inputSenha = document.getElementById('senha');
+
+    // 2. A sua função de gerar senha, "traduzida" para JavaScript
+    function gerarSenhaJS(tamanho = 8) {
+        const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        const tamanhoStr = caracteres.length;
+        let strAleatorio = '';
+
+        // Em JS, usamos crypto.getRandomValues para segurança
+        const randomValues = new Uint32Array(tamanho);
+        window.crypto.getRandomValues(randomValues);
+
+        for (let i = 0; i < tamanho; i++) {
+            // Isso é o equivalente seguro de 'random_int'
+            const index = randomValues[i] % tamanhoStr;
+            strAleatorio += caracteres[index];
+        }
+        return strAleatorio;
+    }
+
+// 3. Adiciona o "ouvinte" de clique no botão
+    botaoGerar.addEventListener('click', function() {
+        // Quando o botão for clicado:
+        // 1. Gera uma nova senha
+        const novaSenha = gerarSenhaJS(8);
+        
+        // 2. Coloca a senha gerada no campo de input
+        inputSenha.value = novaSenha;
+        
+        // 3. Muda o tipo para 'text' para o usuário ver a senha
+        inputSenha.type = 'text';
+
+        // 4. (NOVO) Desabilita o botão para que só possa ser gerada uma vez
+        botaoGerar.disabled = true;
+        botaoGerar.textContent = 'Gerada!'; // Muda o texto do botão
+    });
+
+    // (O listener de 'input' foi removido, pois o campo é readonly)
 </script>
