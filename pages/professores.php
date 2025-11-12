@@ -219,8 +219,8 @@ $professores = $resultado->fetch_all(MYSQLI_ASSOC);
         <div class="form-section">
             <h4> Endereço</h4>
             <div class="form-row">
-                <div class="form-group"><label for="cidade">Cidade:</label><input type="text" id="cidade" name="cidade" value="<?php echo htmlspecialchars($_POST['cidade'] ?? ''); ?>"></div>
                 <div class="form-group"><label for="endereco">Endereço:</label><input type="text" id="endereco" name="endereco" placeholder="Rua, número" value="<?php echo htmlspecialchars($_POST['endereco'] ?? ''); ?>" required></div>
+                <div class="form-group"><label for="cidade">Cidade:</label><input type="text" id="cidade" name="cidade" value="<?php echo htmlspecialchars($_POST['cidade'] ?? ''); ?>"></div>
             </div>
             <div class="form-group"><label for="complemento">Complemento:</label><input type="text" id="complemento" name="complemento" placeholder="Apto, bloco, etc." value="<?php echo htmlspecialchars($_POST['complemento'] ?? ''); ?>" required></div>
         </div>
