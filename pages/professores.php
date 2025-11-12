@@ -72,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 // 2. Insere na tabela 'usuarios'.
 $sql_usuario = "INSERT INTO usuarios (nome, email, senha, tipo, cpf, rg, cidade, endereco, complemento, data_nascimento, forcar_troca_senha)
-VALUES (?, ?, ?, 'professor', ?, ?, ?, ?, ?, , ?, 1)"; // Adicionado ", 1"
+VALUES (?, ?, ?, 'professor', ?, ?, ?, ?, ?, , ?, 1)"; 
 executar_consulta($conn, $sql_usuario, [
 $_POST['nome'], $_POST['email'], $hashedPassword, $_POST['cpf'], $_POST['rg'],
  $_POST['cidade'], $_POST['endereco'], $_POST['complemento'],
@@ -85,7 +85,7 @@ $_POST['nome'], $_POST['email'], $hashedPassword, $_POST['cpf'], $_POST['rg'],
 
                 // 3. Insere na tabela 'professores'.
                 $sql_professor = "INSERT INTO professores (usuario_id, data_contratacao, formacao, instrumentos_leciona, biografia)
-                                  VALUES (?, ?, ?, ?, ?, ?, ?)";
+                                  VALUES (?, ?, ?, ?, ?)";
                 executar_consulta($conn, $sql_professor, [
                     $usuario_id, $_POST['data_contratacao'], $_POST['formacao'],
                     $_POST['instrumentos_leciona'], $_POST['biografia']
@@ -148,13 +148,12 @@ $professores = $resultado->fetch_all(MYSQLI_ASSOC);
                     <label for="senha">Senha (mín. 8 caracteres):</label>
                     <div style="display: flex; gap: 10px;">
                         <input type="password" id="senha" name="senha" required minlength="8" style="flex-grow: 1;" readonly placeholder="Clique em 'Gerar' para criar a senha">
-                        
                         <button type="button" id="btnGerarSenha" class="btn btn-secondary">Gerar</button>
                     </div>
                 </div>
             </div>
 
-                            <div class="form-group">
+            <div class="form-group">
                 <label for="data_nascimento">Data de Nascimento: <span style="color: red;">*</span></label>
                 <input type="text" id="data_nascimento" name="data_nascimento" required 
                        placeholder="Selecione uma data"
@@ -166,40 +165,11 @@ $professores = $resultado->fetch_all(MYSQLI_ASSOC);
                 <div class="form-group"><label for="rg">RG:</label><input type="text" id="rg" name="rg" value="<?php echo htmlspecialchars($_POST['rg'] ?? ''); ?>"></div>
             </div>
 
-
-        </div>
-
-        <div class="form-section">
-            <h4> Dados Profissionais e Musicais</h4>
             <div class="form-row">
-                <div class="form-group"><label for="formacao">Formação Acadêmica:</label><input type="text" id="formacao" name="formacao" placeholder="Ex: Bacharel em Música" value="<?php echo htmlspecialchars($_POST['formacao'] ?? ''); ?>"></div>
                 <div class="form-group">
-                <label for="data_contratacao">Data da Contratação: <span style="color: red;">*</span></label>
-                <input type="text" id="data_contratacao" name="data_contratacao" required 
-                       placeholder="Selecione uma data"
-                       value="<?php echo htmlspecialchars($_POST['data_contratacao'] ?? date('Y-m-d')); ?>">
-            </div>
-            </div>
-            <div class="form-row">
-               <div class="form-group">
-    <label for="instrumentos_leciona">Instrumentos que Leciona:</label>
-    <select id="instrumentos_leciona" name="instrumentos_leciona" required>
-        <option value="" disabled <?php echo empty($_POST['instrumentos_leciona']) ? 'selected' : ''; ?>>-- Selecione um instrumento --</option>
-        <option value="Violão" <?php echo ($_POST['instrumentos_leciona'] ?? '') == 'Violão' ? 'selected' : ''; ?>>Violão</option>
-        <option value="Guitarra" <?php echo ($_POST['instrumentos_leciona'] ?? '') == 'Guitarra' ? 'selected' : ''; ?>>Guitarra</option>
-        <option value="Baixo" <?php echo ($_POST['instrumentos_leciona'] ?? '') == 'Baixo' ? 'selected' : ''; ?>>Baixo</option>
-        <option value="Bateria" <?php echo ($_POST['instrumentos_leciona'] ?? '') == 'Bateria' ? 'selected' : ''; ?>>Bateria</option>
-        <option value="Teclado" <?php echo ($_POST['instrumentos_leciona'] ?? '') == 'Teclado' ? 'selected' : ''; ?>>Teclado</option>
-        <option value="Piano" <?php echo ($_POST['instrumentos_leciona'] ?? '') == 'Piano' ? 'selected' : ''; ?>>Piano</option>
-        <option value="Canto" <?php echo ($_POST['instrumentos_leciona'] ?? '') == 'Canto' ? 'selected' : ''; ?>>Canto</option>
-        <option value="Ukulele" <?php echo ($_POST['instrumentos_leciona'] ?? '') == 'Ukulele' ? 'selected' : ''; ?>>Ukulele</option>
-        <option value="Outro" <?php echo ($_POST['instrumentos_leciona'] ?? '') == 'Outro' ? 'selected' : ''; ?>>Outro (especificar na biografia)</option>
-    </select>
-</div>
-            </div>
-            <div class="form-group">
-                <label for="biografia">Biografia (opcional):</label>
-                <textarea id="biografia" name="biografia" rows="3"><?php echo htmlspecialchars($_POST['biografia'] ?? ''); ?></textarea>
+                    <label for="telefone">Telefone:</label>
+                    <input type="text" id="telefone" name="telefone" placeholder="(00) 00000-0000" value="<?php echo htmlspecialchars($_POST['telefone'] ?? ''); ?>">
+                </div>
             </div>
         </div>
 
@@ -212,11 +182,44 @@ $professores = $resultado->fetch_all(MYSQLI_ASSOC);
             <div class="form-group"><label for="complemento">Complemento:</label><input type="text" id="complemento" name="complemento" placeholder="Apto, bloco, etc." value="<?php echo htmlspecialchars($_POST['complemento'] ?? ''); ?>"></div>
         </div>
 
+        <div class="form-section">
+            <h4> Dados Profissionais e Musicais</h4>
+            <div class="form-row">
+                <div class="form-group"><label for="formacao">Formação Acadêmica:</label><input type="text" id="formacao" name="formacao" placeholder="Ex: Bacharel em Música" value="<?php echo htmlspecialchars($_POST['formacao'] ?? ''); ?>"></div>
+                <div class="form-group">
+                    <label for="data_contratacao">Data da Contratação: <span style="color: red;">*</span></label>
+                    <input type="text" id="data_contratacao" name="data_contratacao" required 
+                           placeholder="Selecione uma data"
+                           value="<?php echo htmlspecialchars($_POST['data_contratacao'] ?? date('Y-m-d')); ?>">
+                </div>
+            </div>
+            <div class="form-row">
+               <div class="form-group">
+                    <label for="instrumentos_leciona">Instrumentos que Leciona:</label>
+                    <select id="instrumentos_leciona" name="instrumentos_leciona" required>
+                        <option value="" disabled <?php echo empty($_POST['instrumentos_leciona']) ? 'selected' : ''; ?>>-- Selecione um instrumento --</option>
+                        <option value="Violão" <?php echo ($_POST['instrumentos_leciona'] ?? '') == 'Violão' ? 'selected' : ''; ?>>Violão</option>
+                        <option value="Guitarra" <?php echo ($_POST['instrumentos_leciona'] ?? '') == 'Guitarra' ? 'selected' : ''; ?>>Guitarra</option>
+                        <option value="Baixo" <?php echo ($_POST['instrumentos_leciona'] ?? '') == 'Baixo' ? 'selected' : ''; ?>>Baixo</option>
+                        <option value="Bateria" <?php echo ($_POST['instrumentos_leciona'] ?? '') == 'Bateria' ? 'selected' : ''; ?>>Bateria</option>
+                        <option value="Teclado" <?php echo ($_POST['instrumentos_leciona'] ?? '') == 'Teclado' ? 'selected' : ''; ?>>Teclado</option>
+                        <option value="Piano" <?php echo ($_POST['instrumentos_leciona'] ?? '') == 'Piano' ? 'selected' : ''; ?>>Piano</option>
+                        <option value="Canto" <?php echo ($_POST['instrumentos_leciona'] ?? '') == 'Canto' ? 'selected' : ''; ?>>Canto</option>
+                        <option value="Ukulele" <?php echo ($_POST['instrumentos_leciona'] ?? '') == 'Ukulele' ? 'selected' : ''; ?>>Ukulele</option>
+                        <option value="Outro" <?php echo ($_POST['instrumentos_leciona'] ?? '') == 'Outro' ? 'selected' : ''; ?>>Outro (especificar na biografia)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="biografia">Biografia (opcional):</label>
+                <textarea id="biografia" name="biografia" rows="3"><?php echo htmlspecialchars($_POST['biografia'] ?? ''); ?></textarea>
+            </div>
+        </div>
+        
         <button type="submit" class="btn btn-primary"> Cadastrar Professor</button>
     </form>
-</div>
     
-<div class="card">
+</div> <div class="card">
     <h3> Lista de Professores (<?php echo count($professores); ?>)</h3>
     <?php if(empty($professores)): ?>
         <div class="empty-state"><p>Nenhum professor cadastrado ainda.</p></div>
@@ -396,3 +399,53 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
+<script>
+        function formatarCPF(event) {
+        let input = event.target;
+        let value = input.value.replace(/\D/g, '');
+        value = value.replace(/(\d{3})(\d)/, '$1.$2');
+        value = value.replace(/(\d{3})(\d)/, '$1.$2');
+        value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+        input.value = value;
+    }
+
+    // Função para formatar RG (00.000.000-0)
+    function formatarRG(event) {
+        let input = event.target;
+        let value = input.value.replace(/\D/g, '');
+        value = value.replace(/^(\d{2})(\d)/, '$1.$2');
+        value = value.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
+        value = value.replace(/\.(\d{3})(\d)$/, '.$1-$2');
+        input.value = value;
+    }
+    
+    // Função para formatar Telefone ( (00) 00000-0000 )
+    function formatarTelefone(event) {
+        let input = event.target;
+        let value = input.value.replace(/\D/g, '');
+        value = value.replace(/^(\d{2})(\d)/g, '($1) $2');
+        value = value.replace(/(\d{5})(\d)/, '$1-$2');
+        input.setAttribute('maxlength', '15'); // (00) 00000-0000
+        input.value = value;
+    }
+
+    const cpfInput = document.getElementById('cpf');
+        if (cpfInput) {
+            cpfInput.setAttribute('maxlength', '14'); // 000.000.000-00
+            cpfInput.addEventListener('input', formatarCPF);
+        }
+
+        // 3. Adiciona a máscara de RG
+        const rgInput = document.getElementById('rg');
+        if (rgInput) {
+            rgInput.setAttribute('maxlength', '12'); // 00.000.000-0
+            rgInput.addEventListener('input', formatarRG);
+        }
+        
+        // 4. Adiciona a máscara de Telefone (Aluno)
+        const telInput = document.getElementById('telefone');
+        if (telInput) {
+            telInput.addEventListener('input', formatarTelefone);
+        }
+
+</script>

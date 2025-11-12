@@ -94,12 +94,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 // 3. Insere na tabela 'alunos', usando o ID do usuário.
                 // CORREÇÃO: Removido 'preferencia_horario', readicionado 'tipo_aula_desejada'
-                $sql_aluno = "INSERT INTO alunos (usuario_id, matricula, nome_responsavel, telefone_responsavel, email_responsavel, instrumento, nivel_experiencia, tipo_aula_desejada, possui_instrumento, objetivos)
+                $sql_aluno = "INSERT INTO alunos (usuario_id, matricula, nome_responsavel, telefone_responsavel, email_responsavel, instrumento, nivel_experiencia, preferencia_horario, possui_instrumento, objetivos)
                                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
                 $stmt_aluno = executar_consulta($conn, $sql_aluno, [
                     $usuario_id, date('Y') . $usuario_id, // Cria uma matrícula simples
                     $_POST['nome_responsavel'], $_POST['telefone_responsavel'], $_POST['email_responsavel'], $_POST['instrumento'],
-                    $_POST['nivel_experiencia'], $_POST['tipo_aula_desejada'], // Corrigido
+                    $_POST['nivel_experiencia'], $_POST['preferencia_horario'],
                     isset($_POST['possui_instrumento']) ? 1 : 0, $_POST['objetivos']
                 ]);
 
