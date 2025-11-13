@@ -112,4 +112,6 @@ Acesse `http://localhost/TCC-main/dev_script.php` para:
 1.  **Criar usuários em massa** (alunos, professores ou admins) para testes de performance e capacidade.
 2.  **Editar o login de um Admin,** permitindo que você defina um novo email e uma nova senha para uma conta de administrador (útil para recuperar o acesso).
 
-##  Estrutura de Arquivos
+
+
+
