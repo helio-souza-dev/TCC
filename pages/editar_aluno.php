@@ -159,7 +159,7 @@ if ($aluno_id_to_load) {
                  <div class="form-row">
                     <div class="form-group">
                         <label for="matricula">Matrícula:</label>
-                        <input type="text" id="matricula" name="matricula" required value="<?php echo htmlspecialchars($student['matricula'] ?? ''); ?>">
+                        <input readonly type="text" id="matricula" name="matricula" required value="<?php echo htmlspecialchars($student['matricula'] ?? ''); ?>">
                     </div>
                     <div class="form-group">
                        <label for="instrumento">Instrumento Principal:</label>

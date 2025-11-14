@@ -18,6 +18,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['action'] === 'agendar_aula'
     $horario_inicio = $_POST['horario_inicio'] ?? '';
     $horario_fim = $_POST['horario_fim'] ?? '';
     $observacoes = $_POST['observacoes'] ?? '';
+    $instrumento = $_POST['instrumento'] ?? '';
+    $instrumento_leciona = $_POST['instrumentos_leciona'] ?? '';
     
     // Validações básicas antes de ir para o banco.
     if (empty($aluno_id) || empty($disciplina) || empty($data_aula) || empty($horario_inicio) || empty($horario_fim)) {
@@ -92,14 +94,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['action'] === 'agendar_aula'
 // --- LÓGICA 2: BUSCAR ALUNOS E PROFESSORES PARA PREENCHER O FORMULÁRIO ---
 try {
     // Busca todos os alunos ativos.
-    $sql_alunos = "SELECT a.id, a.matricula, u.nome 
+    $sql_alunos = "SELECT a.id, a.matricula, u.nome, a.instrumento
                    FROM alunos a JOIN usuarios u ON a.usuario_id = u.id 
                    WHERE u.ativo = 1 ORDER BY u.nome ASC";
     $resultado_alunos = $conn->query($sql_alunos);
     $students = $resultado_alunos->fetch_all(MYSQLI_ASSOC);
     
     // Busca todos os professores ativos.
-    $sql_professores = "SELECT p.id, u.nome 
+    $sql_professores = "SELECT p.id, u.nome, p.instrumentos_leciona
                         FROM professores p JOIN usuarios u ON p.usuario_id = u.id 
                         WHERE u.ativo = 1 ORDER BY u.nome ASC";
     $resultado_professores = $conn->query($sql_professores);
@@ -137,6 +139,7 @@ try {
                 <?php foreach($students as $student): ?>
                     <option value="<?php echo htmlspecialchars($student['id']); ?>" <?php echo (isset($_POST['aluno_id']) && $_POST['aluno_id'] == $student['id']) ? 'selected' : ''; ?>>
                         <?php echo htmlspecialchars($student['nome']); ?> - <?php echo htmlspecialchars($student['matricula'] ?? 'S/N'); ?>
+                        - <?php echo htmlspecialchars($student['instrumento'] ?? 'S/N'); ?>
                     </option>
                 <?php endforeach; ?>
             </select>
@@ -149,7 +152,7 @@ try {
                     <option value="">Escolha um professor...</option>
                     <?php foreach($professors as $prof): ?>
                         <option value="<?php echo htmlspecialchars($prof['id']); ?>" <?php echo (isset($_POST['professor_id']) && $_POST['professor_id'] == $prof['id']) ? 'selected' : ''; ?>>
-                            <?php echo htmlspecialchars($prof['nome']); ?>
+                            <?php echo htmlspecialchars($prof['nome']); ?> - <?php echo htmlspecialchars($prof['instrumentos_leciona']); ?>
                         </option>
                     <?php endforeach; ?>
                 </select>

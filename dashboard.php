@@ -13,7 +13,7 @@ $page = $_GET['page'] ?? 'home';
 
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Sistema de Agendamento de Aulas</title>
+    <title>Dashboard - (SAA)</title>
    
 
     <link rel="stylesheet" href="https://cdn.datatables.net/2.0.8/css/dataTables.dataTables.min.css">
@@ -30,7 +30,7 @@ $page = $_GET['page'] ?? 'home';
 <body class="dashboard">
     <header class="header">
         <div class="header-content">
-            <h1>Sistema de Agendamento de Aulas</h1>
+            <h1>Forjados Music Studio </h1>
             <div class="user-info">
                 <span>Olá, <?php echo htmlspecialchars($_SESSION['user_name']); ?></span>
                 <span>(<?php echo ucfirst($_SESSION['user_type']); ?>)</span>
