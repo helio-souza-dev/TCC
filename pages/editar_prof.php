@@ -140,7 +140,7 @@ if ($professor_id_to_load) {
                     <div class="form-group"><label for="email">Email:</label><input type="email" id="email" name="email" required value="<?php echo htmlspecialchars($professor['email']); ?>"></div>
                 </div>
                 <div class="form-row">
-                    <div class="form-group"><label for="cpf">CPF:</label><input readonlytype="text" id="cpf" name="cpf" required value="<?php echo htmlspecialchars($professor['cpf']); ?>"></div>
+                    <div class="form-group"><label for="cpf">CPF:</label><input readonly type="text" id="cpf" name="cpf" required value="<?php echo htmlspecialchars($professor['cpf']); ?>"></div>
                     <div class="form-group"><label for="rg">RG:</label><input readonly type="text" id="rg" name="rg" value="<?php echo htmlspecialchars($professor['rg'] ?? ''); ?>"></div>
                 </div>
                 <div class="form-row">
