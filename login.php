@@ -1,37 +1,35 @@
 <?php
-// Inclui o nosso arquivo de autenticação simplificado.
-// É ele quem vai fazer todo o trabalho de verificar o login no banco de dados.
+
 require_once 'includes/auth.php'; 
 
-// Se o usuário já estiver logado (ou seja, já tem uma sessão ativa),
-// redireciona ele direto para o painel principal (dashboard).
+
 if(isLoggedIn()) {
     header('Location: dashboard.php');
     exit();
 }
 
-// Variáveis para guardar as mensagens que serão mostradas ao usuário.
+
 $erro = '';
 $sucesso = '';
 
-// Verifica se o formulário foi enviado (se o método da requisição é POST).
+
 if($_POST) {
-    // Pega o e-mail e a senha que o usuário digitou no formulário.
+
     $email = $_POST['email'] ?? '';
     $senha = $_POST['senha'] ?? '';
     
-    // Verifica se os campos não estão vazios.
+
     if (empty($email) || empty($senha)) {
         $erro = 'Por favor, preencha todos os campos!';
     } else {
-        // Tenta fazer o login usando a nossa função simplificada do arquivo auth.php
+ 
         if (login($email, $senha)) {
-            // Se a função login() retornar 'true', o login foi um sucesso.
+
             $sucesso = 'Login realizado com sucesso! Redirecionando...';
-            // Espera 2 segundos e redireciona para o painel.
+
             header('refresh:2;url=dashboard.php');
         } else {
-            // Se a função login() retornar 'false', os dados estavam errados.
+.
             $erro = 'Email ou senha incorretos! Verifique suas credenciais.';
         }
     }
@@ -53,13 +51,13 @@ if($_POST) {
           display: flex;
           justify-content: center;
           align-items: center;
-          /* Fundo com imagem (você pode precisar ajustar o caminho da imagem se necessário) */
+
           background: linear-gradient(135deg, rgba(139, 124, 200, 0.8), rgba(74, 111, 165, 0.9)),
           url("img/fundo_login.png") ;
           background-size: cover;
         }
 
-        /* Sobrescreve o .login-form do style.css para usar o estilo "glass" do loginazul */
+
         .login-form {
           background: linear-gradient(135deg, rgba(42, 42, 42, 0.95) 0%, rgba(26, 26, 46, 0.95) 100%);
           padding: 40px;
@@ -67,8 +65,8 @@ if($_POST) {
           box-shadow: 0 15px 35px rgba(139, 124, 200, 0.4);
           width: 100%;
           max-width: 400px;
-          text-align: center; /* Centralizar tudo */
-          backdrop-filter: blur(15px); /* Efeito "glass" */
+          text-align: center; 
+          backdrop-filter: blur(15px); /
           border: 1px solid rgba(139, 124, 200, 0.3);
         }
 
@@ -79,7 +77,7 @@ if($_POST) {
           text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
         }
 
-        /* Espaço para logo ou imagem */
+/
         .login-form .logo {
           margin-bottom: 20px;
         }
@@ -91,7 +89,7 @@ if($_POST) {
           background: rgba(255, 255, 255, 0.1);
         }
 
-        .login-form p.subtitle { /* Alvo específico no subtítulo */
+        .login-form p.subtitle { 
           margin-bottom: 25px;
           font-size: 14px;
           color: #e0e0e0;
@@ -102,34 +100,34 @@ if($_POST) {
           text-align: left;
         }
 
-        /* Sobrescreve labels do style.css */
+
         .form-group label {
           font-weight: 600;
-          color: #a594d1; /* --color-purple-light */
+          color: #a594d1; 
           display: block;
           margin-bottom: 8px;
-          text-transform: none; /* Remove o uppercase do style.css */
+          text-transform: none; 
         }
 
-        /* Sobrescreve inputs do style.css */
+
         .form-group input {
           width: 100%;
           padding: 12px;
-          border: 2px solid rgba(139, 124, 200, 0.5); /* Borda roxa fraca */
+          border: 2px solid rgba(139, 124, 200, 0.5); 
           border-radius: 8px;
-          background: rgba(42, 42, 42, 0.8); /* Fundo escuro transparente */
+          background: rgba(42, 42, 42, 0.8); 
           color: #fff;
           font-size: 16px;
           transition: all 0.3s ease;
         }
         
         .form-group input:focus {
-          border-color: #a594d1; /* Borda roxa clara no foco */
+          border-color: #a594d1; 
           box-shadow: 0 0 0 3px rgba(139, 124, 200, 0.2);
           outline: none;
         }
 
-        /* Estilo do botão principal (de loginazul.php) */
+
         .btn {
           width: 100%;
           padding: 12px;
@@ -148,7 +146,7 @@ if($_POST) {
           box-shadow: 0 8px 20px rgba(139, 124, 200, 0.4);
         }
         
-        /* Links sociais (de loginazul.php) */
+ 
         .social-links {
           margin-top: 25px;
           display: flex;
@@ -171,7 +169,7 @@ if($_POST) {
           background: rgba(139, 124, 200, 0.4);
         }
 
-        /* Os estilos .alert-error e .alert-success virão do style.css que já editamos */
+
     </style>
 </head>
 <body>

@@ -2,27 +2,26 @@
 require_once 'config/database.php';
 require_once 'includes/auth.php';
 
-// Variáveis para as mensagens.
+
 $message = '';
 $error = '';
 
-// A função de validar CPF não muda.
+
 function validarCPF(string $cpf): bool
 {
-    // remove caracteres não numéricos
+
     $cpf = preg_replace('/[^0-9]/', '', $cpf);
 
-    // verifica o tamanho
+
     if (strlen($cpf) != 11) {
         return false;
     }
 
-    // verifica se todos os dígitos são iguais
+
     if (preg_match('/(\d)\1{10}/', $cpf)) {
         return false;
     }
 
-    // calcula o primeiro dígito verificador
     $soma = 0;
     for ($i = 0; $i < 9; $i++) {
         $soma += intval($cpf[$i]) * (10 - $i);
@@ -30,12 +29,12 @@ function validarCPF(string $cpf): bool
     $resto = $soma % 11;
     $digito1 = ($resto < 2) ? 0 : 11 - $resto;
 
-    // verifica o primeiro dígito
+ 
     if ($cpf[9] != $digito1) {
         return false;
     }
 
-    // calcula o segundo dígito verificador
+   
     $soma = 0;
     for ($i = 0; $i < 10; $i++) {
         $soma += intval($cpf[$i]) * (11 - $i);
@@ -43,7 +42,7 @@ function validarCPF(string $cpf): bool
     $resto = $soma % 11;
     $digito2 = ($resto < 2) ? 0 : 11 - $resto;
 
-    // verifica o segundo dígito
+
     if ($cpf[10] != $digito2) {
         return false;
     }
@@ -52,15 +51,14 @@ function validarCPF(string $cpf): bool
 }
 
 
-// --- LÓGICA PRINCIPAL: O QUE FAZER QUANDO UM FORMULÁRIO É ENVIADO ---
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
 
-    // --- AÇÃO: ADICIONAR NOVO PROFESSOR ---
-    // --- AÇÃO: ADICIONAR NOVO PROFESSOR ---
+
     if ($action === 'add') {
         
-        // --- INÍCIO DAS VALIDAÇÕES ---
+
         $data_nascimento = $_POST['data_nascimento'] ?? '';
         $data_contratacao = $_POST['data_contratacao'] ?? '';
 
@@ -73,12 +71,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif (empty($data_contratacao)) { 
             $error = "A Data de Contratação é obrigatória.";
         } else {
-            // --- VALIDAÇÃO DAS DATAS ---
+
+            
             try {
                 $hoje = new DateTime();
-                $hoje_sem_hora = new DateTime($hoje->format('Y-m-d')); // Pega só a data
+                $hoje_sem_hora = new DateTime($hoje->format('Y-m-d')); 
                 
-                // 1. Valida Data de Nascimento
+                // validaçao data de nascimento
                 $data_nascimento_obj = new DateTime($data_nascimento);
                 $idade_minima = 18;
                 
@@ -92,7 +91,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
 
-                // 2. Valida Data de Contratação (SÓ SE A DATA DE NASCIMENTO ESTIVER OK)
+                // validaçao data de contratacao
                 if (empty($error)) {
                     $data_contratacao_obj = new DateTime($data_contratacao);
                     if ($data_contratacao_obj > $hoje_sem_hora) {
@@ -103,19 +102,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } catch (Exception $e) {
                 $error = "Formato de Data de Nascimento ou Contratação inválido.";
             }
-            // --- FIM DA VALIDAÇÃO DE DATAS ---
         }
         
-        // Se as validações (incluindo a de idade) passaram, $error estará vazio.
+
         if (empty($error)) { 
             
             iniciar_transacao($conn);
         
             try {
-                // 1. Criptografa a senha
+
                 $hashedPassword = password_hash($_POST['senha'], PASSWORD_DEFAULT);
 
-                // 2. Insere na tabela 'usuarios' (Versão corrigida com telefone)
                 $sql_usuario = "INSERT INTO usuarios (nome, email, senha, tipo, cpf, rg, cidade, endereco, complemento, data_nascimento, telefone, forcar_troca_senha)
                 VALUES (?, ?, ?, 'professor', ?, ?, ?, ?, ?, ?, ?, 1)";
                 
@@ -125,10 +122,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $_POST['data_nascimento'], $_POST['telefone']
                 ]);
 
-                // 3. Pega o ID
+
                 $usuario_id = $conn->insert_id;
 
-                // 4. Insere na tabela 'professores'
+
                 $sql_professor = "INSERT INTO professores (usuario_id, data_contratacao, formacao, instrumentos_leciona, biografia)
                                     VALUES (?, ?, ?, ?, ?)";
                 executar_consulta($conn, $sql_professor, [
@@ -146,7 +143,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     
     } 
-    // --- AÇÃO: APAGAR UM PROFESSOR ---
+
     elseif ($action === 'delete') {
         $usuario_id = $_POST['usuario_id'] ?? null;
         if ($usuario_id) {
@@ -159,7 +156,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
     
-// --- LÓGICA PARA LISTAR OS PROFESSORES NA TABELA ---
+
 $sql_listar = "SELECT p.*, u.nome, u.email, u.created_at, u.ativo, u.cpf, u.rg, p.id as professor_id, u.id as usuario_id
                FROM professores p 
                JOIN usuarios u ON p.usuario_id = u.id 
@@ -313,7 +310,7 @@ $professores = $resultado->fetch_all(MYSQLI_ASSOC);
 </div>
 
 <script>
-// JavaScript não foi alterado.
+
 document.getElementById('cpf').addEventListener('input', function(e) {
     let value = e.target.value.replace(/\D/g, '');
     value = value.replace(/(\d{3})(\d)/, '$1.$2');
@@ -324,98 +321,90 @@ document.getElementById('cpf').addEventListener('input', function(e) {
 </script>
 
 <script>
-    // 1. Pega os elementos que acabamos de criar no HTML
+
     const botaoGerar = document.getElementById('btnGerarSenha');
     const inputSenha = document.getElementById('senha');
 
-    // 2. A sua função de gerar senha, "traduzida" para JavaScript
     function gerarSenhaJS(tamanho = 8) {
         const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
         const tamanhoStr = caracteres.length;
         let strAleatorio = '';
 
-        // Em JS, usamos crypto.getRandomValues para segurança
         const randomValues = new Uint32Array(tamanho);
         window.crypto.getRandomValues(randomValues);
 
         for (let i = 0; i < tamanho; i++) {
-            // Isso é o equivalente seguro de 'random_int'
+
             const index = randomValues[i] % tamanhoStr;
             strAleatorio += caracteres[index];
         }
         return strAleatorio;
     }
 
-// 3. Adiciona o "ouvinte" de clique no botão
     botaoGerar.addEventListener('click', function() {
-        // Quando o botão for clicado:
-        // 1. Gera uma nova senha
+
         const novaSenha = gerarSenhaJS(8);
-        
-        // 2. Coloca a senha gerada no campo de input
+
         inputSenha.value = novaSenha;
         
-        // 3. Muda o tipo para 'text' para o usuário ver a senha
         inputSenha.type = 'text';
 
-        // 4. (NOVO) Desabilita o botão para que só possa ser gerada uma vez
         botaoGerar.disabled = true;
-        botaoGerar.textContent = 'Gerada!'; // Muda o texto do botão
+        botaoGerar.textContent = 'Gerada!'; 
     });
 
-    // (O listener de 'input' foi removido, pois o campo é readonly)
+
 </script>
 
 <script>
-    // Função pura de JS para formatar data (DD/MM/AAAA)
+
     function formatarDataInput(event) {
         let input = event.target;
-        // Remove tudo que não for dígito
+
         let valor = input.value.replace(/\D/g, '');
         let tamanho = valor.length;
 
-        // Adiciona a primeira barra (DD/)
+
         if (tamanho > 2) {
             valor = valor.substring(0, 2) + '/' + valor.substring(2);
         }
-        // Adiciona a segunda barra (DD/MM/)
+
         if (tamanho > 4) {
-            // Limita aos 4 dígitos do ano (total de 10 caracteres: DD/MM/AAAA)
+
             valor = valor.substring(0, 5) + '/' + valor.substring(5, 9); 
         }
         
-        // Atualiza o valor no campo
+
         input.value = valor;
     }
 
 
 document.addEventListener('DOMContentLoaded', function() {
     
-    // 1. Configura o seletor para DATA DE NASCIMENTO
+
     flatpickr("#data_nascimento", {
         locale: "pt",
         dateFormat: "Y-m-d",
         altInput: true,
         altFormat: "d/m/Y",
-        allowInput: true, // Permite digitação
-        
-        // Conecta a máscara e o maxlength
+        allowInput: true, 
+
         onReady: function(selectedDates, dateStr, instance) {
             instance.altInput.setAttribute('maxlength', '10');
             instance.altInput.addEventListener('input', formatarDataInput);
         }
     });
 
-    // 2. Configura o seletor para DATA DE CONTRATAÇÃO
+
     flatpickr("#data_contratacao", {
         locale: "pt",
         dateFormat: "Y-m-d",
         altInput: true,
         altFormat: "d/m/Y",
-        allowInput: true, // Permite digitação
+        allowInput: true, 
         maxDate: "today",
         
-        // Conecta a máscara e o maxlength
+
         onReady: function(selectedDates, dateStr, instance) {
             instance.altInput.setAttribute('maxlength', '10');
             instance.altInput.addEventListener('input', formatarDataInput);
@@ -427,14 +416,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 <script>
-// NOVO SCRIPT PARA DATATABLES
+
 document.addEventListener('DOMContentLoaded', function() {
-    // Usamos o jQuery, que foi carregado no dashboard.php
+
     if (typeof jQuery !== 'undefined') {
         jQuery(document).ready(function($) {
             $('#tabelaProfessores').DataTable({
                 "language": {
-                    // Arquivo de tradução oficial do DataTables para PT-BR
+
                     "url": "https://cdn.datatables.net/plug-ins/2.0.8/i18n/pt-BR.json" 
                 }
             });
@@ -453,7 +442,7 @@ document.addEventListener('DOMContentLoaded', function() {
         input.value = value;
     }
 
-    // Função para formatar RG (00.000.000-0)
+   
     function formatarRG(event) {
         let input = event.target;
         let value = input.value.replace(/\D/g, '');
@@ -463,30 +452,30 @@ document.addEventListener('DOMContentLoaded', function() {
         input.value = value;
     }
     
-    // Função para formatar Telefone ( (00) 00000-0000 )
+
     function formatarTelefone(event) {
         let input = event.target;
         let value = input.value.replace(/\D/g, '');
         value = value.replace(/^(\d{2})(\d)/g, '($1) $2');
         value = value.replace(/(\d{5})(\d)/, '$1-$2');
-        input.setAttribute('maxlength', '15'); // (00) 00000-0000
+        input.setAttribute('maxlength', '15'); 
         input.value = value;
     }
 
     const cpfInput = document.getElementById('cpf');
         if (cpfInput) {
-            cpfInput.setAttribute('maxlength', '14'); // 000.000.000-00
+            cpfInput.setAttribute('maxlength', '14'); 
             cpfInput.addEventListener('input', formatarCPF);
         }
 
-        // 3. Adiciona a máscara de RG
+
         const rgInput = document.getElementById('rg');
         if (rgInput) {
-            rgInput.setAttribute('maxlength', '12'); // 00.000.000-0
+            rgInput.setAttribute('maxlength', '12'); 
             rgInput.addEventListener('input', formatarRG);
         }
         
-        // 4. Adiciona a máscara de Telefone (Aluno)
+
         const telInput = document.getElementById('telefone');
         if (telInput) {
             telInput.addEventListener('input', formatarTelefone);

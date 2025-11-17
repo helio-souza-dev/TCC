@@ -8,7 +8,7 @@ require_once 'includes/auth.php';
 $message = '';
 $error = '';
 
-// A função para validar o CPF não mexe com o banco de dados, então ela continua igual.
+
 function validarCPF(string $cpf): bool
 {
     $cpf = preg_replace('/[^0-9]/', '', $cpf);
@@ -28,30 +28,30 @@ function validarCPF(string $cpf): bool
 }
 
 
-// --- LÓGICA PRINCIPAL: O QUE FAZER QUANDO UM FORMULÁRIO É ENVIADO ---
 
-// Verifica se a página foi carregada através de um envio de formulário (método POST).
+
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
-    // Pega a 'action' para saber se é um 'add' (adicionar) ou 'delete' (apagar).
+
     $action = $_POST['action'] ?? '';
 
-    // --- AÇÃO: ADICIONAR NOVO ALUNO ---
+    // add aluno
    if ($action === 'add') {
-        // 1. Validação de CPF
+
         if (empty($_POST['cpf']) || !validarCPF($_POST['cpf'])) {
             $error = "O CPF informado é inválido.";
-        // 2. Validação de Senha
+
         } elseif (empty($_POST['senha']) || strlen($_POST['senha']) < 8) {
             $error = "A senha é obrigatória e deve ter no mínimo 8 caracteres.";
 
-        // 3. Validação de Data de Nascimento (se estiver vazio)
-        } elseif (empty($_POST['data_nascimento'])) { // Validação de campo obrigatório
+
+        } elseif (empty($_POST['data_nascimento'])) { 
             $error = "A Data de Nascimento é obrigatória.";
             
         } else {
             
-            // --- VALIDAÇÃO DE IDADE MÍNIMA (4 ANOS) ---
+            // idade minima
             $data_nascimento = $_POST['data_nascimento'];
             $idade_minima = 4;
         
@@ -59,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $data_nascimento_obj = new DateTime($data_nascimento);
                 $hoje = new DateTime();
                 $diferenca = $hoje->diff($data_nascimento_obj);
-                $idade = $diferenca->y; // Pega a idade em anos
+                $idade = $diferenca->y;
 
                 if ($idade < $idade_minima) {
                     $error = "O aluno deve ter no mínimo {$idade_minima} anos para ser cadastrado. Idade atual: {$idade} anos.";
@@ -67,21 +67,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } catch (Exception $e) {
                 $error = "Data de Nascimento inválida.";
             }
-            // --- FIM DA VALIDAÇÃO DE IDADE MÍNIMA ---
+
         }
         
-        // Se as validações (incluindo a de idade) passaram, $error estará vazio.
-        if (empty($error)) { // Executa o cadastro APENAS se não houver erro
+
+        if (empty($error)) { 
             
-            // Inicia uma transação: ou tudo funciona, ou nada é salvo.
-            // Isso evita que um usuário seja criado sem os dados de aluno.
+
             iniciar_transacao($conn);
         
             try {
-                // 1. Criptografa a senha para guardar no banco de forma segura.
+
                 $hashedPassword = password_hash($_POST['senha'], PASSWORD_DEFAULT);
 
-                // 2. Insere na tabela 'usuarios'.
+    
                 $sql_usuario = "INSERT INTO usuarios (nome, email, senha, tipo, cpf, rg, cidade, endereco, complemento, data_nascimento, telefone, forcar_troca_senha)
                 VALUES (?, ?, ?, 'aluno', ?, ?, ?, ?, ?, ?, ?, 1)";
                 $stmt_usuario = executar_consulta($conn, $sql_usuario, [
@@ -89,11 +88,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $_POST['cidade'], $_POST['endereco'], $_POST['complemento'], $_POST['data_nascimento'], $_POST['telefone']
                 ]);
 
-                // Pega o ID do usuário que acabamos de criar.
+
                 $usuario_id = $conn->insert_id;
 
-                // 3. Insere na tabela 'alunos', usando o ID do usuário.
-                // CORREÇÃO: Removido 'preferencia_horario', readicionado 'tipo_aula_desejada'
+
                 $sql_aluno = "INSERT INTO alunos (usuario_id, matricula, nome_responsavel, telefone_responsavel, email_responsavel, instrumento, nivel_experiencia, preferencia_horario, possui_instrumento, objetivos)
                                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
                 $stmt_aluno = executar_consulta($conn, $sql_aluno, [
@@ -103,27 +101,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     isset($_POST['possui_instrumento']) ? 1 : 0, $_POST['objetivos']
                 ]);
 
-                // Se chegou até aqui sem erros, confirma as alterações no banco.
+
                 confirmar_transacao($conn);
                 $message = "Aluno cadastrado com sucesso!";
 
             } catch (Exception $e) {
-                // Se deu qualquer erro, desfaz tudo o que foi feito.
+
                 reverter_transacao($conn);
                 $error = "Erro ao cadastrar aluno: " . $e->getMessage();
             }
         }
     }
 
-    // --- AÇÃO: APAGAR UM ALUNO ---
+    // apagar aluno
     elseif ($action === 'delete') {
         $usuario_id = $_POST['usuario_id'] ?? null;
         if ($usuario_id) {
             $sql = "DELETE FROM usuarios WHERE id = ?";
             $stmt = executar_consulta($conn, $sql, [$usuario_id]);
             
-            // Graças à configuração do banco (ON DELETE CASCADE),
-            // apagar o usuário também apaga os dados do aluno associado.
+
             $message = "Aluno excluído com sucesso!";
         } else {
             $error = "ID do usuário não fornecido para exclusão.";
@@ -132,15 +129,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 
-// --- LÓGICA PARA LISTAR OS ALUNOS NA TABELA ---
+// listar alunos na tabela
 
-// Escreve o comando SQL para buscar todos os alunos e juntar com seus dados da tabela de usuários.
+
 $sql_listar = "SELECT a.*, u.nome, u.email, u.created_at, u.id as usuario_id FROM alunos a JOIN usuarios u ON a.usuario_id = u.id ORDER BY u.nome ASC";
 
-// Executa a consulta diretamente, pois não há parâmetros do usuário aqui.
 $resultado = $conn->query($sql_listar);
 
-// Pega todos os resultados e guarda no array $alunos.
+
 $alunos = $resultado->fetch_all(MYSQLI_ASSOC);
 
 ?>
@@ -160,19 +156,19 @@ $alunos = $resultado->fetch_all(MYSQLI_ASSOC);
 
         <div class="form-section">
             <h4>Dados Pessoais</h4>
-    <!--Email-->
+
             <div class="form-row">
                 <div class="form-group">
                     <label for="nome">Nome Completo:</label>
                     <input type="text" id="nome" name="nome" required value="<?php echo htmlspecialchars($_POST['nome'] ?? ''); ?>">
                 </div>
-    <!--Email-->
+
                 <div class="form-group">
                     <label for="email">Email:</label>
                     <input type="email" id="email" name="email" required value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>">
                 </div>
             </div>
-    <!--Senha e Gerar senha-->
+
             <div class="form-row">
                 <div class="form-group" style="flex: 1;">
                     <label for="senha">Senha (mín. 8 caracteres):</label>
@@ -182,26 +178,26 @@ $alunos = $resultado->fetch_all(MYSQLI_ASSOC);
                     </div>
                 </div>
             </div>
-    <!--Cpf-->
+
             <div class="form-row">
                 <div class="form-group">
                     <label for="cpf">CPF:</label>
                     <input type="text" id="cpf" name="cpf" required value="<?php echo htmlspecialchars($_POST['cpf'] ?? ''); ?>">
                 </div>
-    <!--Rg-->
+
                 <div class="form-group">
                     <label for="rg">RG:</label>
                     <input type="text" id="rg" name="rg" maxlength="12" required value="<?php echo htmlspecialchars($_POST['rg'] ?? ''); ?>">
                 </div>
             </div>
-    <!--Data de Nascimento-->
+
             <div class="form-group">
                 <label for="data_nascimento">Data de Nascimento: <span style="color: red;">*</span></label>
                 <input type="text" id="data_nascimento" name="data_nascimento" required 
                        placeholder="Selecione uma data"
                        value="<?php echo htmlspecialchars($_POST['data_nascimento'] ?? ''); ?>"> <!-- Corrigido: 'data_nascimento' e não 'data_contratacao' -->
             </div>
-    <!--Telefone-->
+
             <div class="form-row">
                 <div class="form-group">
                     <label for="telefone">Telefone:</label>
@@ -398,37 +394,35 @@ $alunos = $resultado->fetch_all(MYSQLI_ASSOC);
     <?php endif; ?>
 </div>
 
-<!-- idade -->
 
-<script> // verifica a idade do aluno
+
+<script> 
 document.addEventListener('DOMContentLoaded', function() {
     const dataNascimentoInput = document.getElementById('data_nascimento');
     const responsavelFields = document.getElementById('responsavel-fields');
     const nomeResponsavelInput = document.getElementById('nome_responsavel');
 
-    function checkAge() {
+    function checarIdade() {
         if (!dataNascimentoInput.value) {
             responsavelFields.style.display = 'none';
             nomeResponsavelInput.removeAttribute('required');
             return;
         }
 
-        // Tenta criar a data a partir do formato YYYY-MM-DD
-        let dataNasc;
+
         if (dataNascimentoInput.value.includes('/')) {
-             // Se o usuário digitou (DD/MM/AAAA), o flatpickr ainda não converteu
-             // Precisamos inverter antes de checar
+
             const partes = dataNascimentoInput.value.split('/');
             if (partes.length === 3) {
                  dataNasc = new Date(partes[2], partes[1] - 1, partes[0]);
             } else {
-                 return; // Formato inválido
+                 return; 
             }
         } else {
              dataNasc = new Date(dataNascimentoInput.value);
         }
 
-        if (isNaN(dataNasc.getTime())) return; // Data inválida
+        if (isNaN(dataNasc.getTime())) return; 
 
         const hoje = new Date();
         let idade = hoje.getFullYear() - dataNasc.getFullYear();
@@ -446,15 +440,12 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Adiciona o 'change' para quando o usuário USA o calendário flatpickr
-    // (O flatpickr dispara 'change' quando uma data é selecionada)
-    dataNascimentoInput.addEventListener('change', checkAge);
+
+    dataNascimentoInput.addEventListener('change', checarIdade);
     
-    // Adiciona o 'input' para quando o usuário ESTÁ DIGITANDO
-    // (Precisamos pegar o altInput que o flatpickr cria)
-    // Vamos fazer isso dentro do onReady do flatpickr no outro script
+
     
-    checkAge(); // Executa ao carregar a página para o caso de o formulário ser recarregado com dados
+    checarIdade(); 
     
     const deleteButtons = document.querySelectorAll('.delete-btn');
     deleteButtons.forEach(button => {
@@ -470,32 +461,30 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <script>
-    // Função pura de JS para formatar data (DD/MM/AAAA)
+
     function formatarDataInput(event) {
         let input = event.target;
-        // Remove tudo que não for dígito
+
         let valor = input.value.replace(/\D/g, '');
         let tamanho = valor.length;
 
-        // Adiciona a primeira barra (DD/)
+
         if (tamanho > 2) {
             valor = valor.substring(0, 2) + '/' + valor.substring(2);
         }
-        // Adiciona a segunda barra (DD/MM/)
+
         if (tamanho > 4) {
-            // Limita aos 4 dígitos do ano (total de 10 caracteres: DD/MM/AAAA)
+
             valor = valor.substring(0, 5) + '/' + valor.substring(5, 9); 
         }
         
-        // Atualiza o valor no campo
+
         input.value = valor;
         
-        // Dispara manualmente um evento 'change' no input original (o escondido)
-        // para que o checkAge() seja acionado enquanto digita
-        // Isso é complexo, vamos simplificar... O checkAge() será chamado no 'blur' (quando sair do campo)
+
     }
 
-    // Função para formatar CPF (000.000.000-00)
+
     function formatarCPF(event) {
         let input = event.target;
         let value = input.value.replace(/\D/g, '');
@@ -505,7 +494,7 @@ document.addEventListener('DOMContentLoaded', function() {
         input.value = value;
     }
 
-    // Função para formatar RG (00.000.000-0)
+
     function formatarRG(event) {
         let input = event.target;
         let value = input.value.replace(/\D/g, '');
@@ -515,69 +504,67 @@ document.addEventListener('DOMContentLoaded', function() {
         input.value = value;
     }
     
-    // Função para formatar Telefone ( (00) 00000-0000 )
+
     function formatarTelefone(event) {
         let input = event.target;
         let value = input.value.replace(/\D/g, '');
         value = value.replace(/^(\d{2})(\d)/g, '($1) $2');
         value = value.replace(/(\d{5})(\d)/, '$1-$2');
-        input.setAttribute('maxlength', '15'); // (00) 00000-0000
+        input.setAttribute('maxlength', '15'); 
         input.value = value;
     }
 
     document.addEventListener('DOMContentLoaded', function() {
         
-        // 1. Configura o seletor de DATA (em Português)
+
         flatpickr("#data_nascimento", {
-            locale: "pt", // Usa a tradução que carregamos
-            dateFormat: "Y-m-d", // Formato que o banco de dados entende
-            altInput: true, // Mostra um formato amigável para o usuário
-            altFormat: "d/m/Y", // Formato amigável
+            locale: "pt", 
+            dateFormat: "Y-m-d", 
+            altInput: true, 
+            altFormat: "d/m/Y", 
             allowInput: true,
             
-            // Conecta a máscara e o maxlength
+  
             onReady: function(selectedDates, dateStr, instance) {
                 instance.altInput.setAttribute('maxlength', '10');
                 instance.altInput.addEventListener('input', formatarDataInput);
                 
-                // Pega o input de data visível
+
                 const dataInputVisivel = instance.altInput;
                 
-                // Adiciona o 'checkAge' para quando o usuário TERMINAR de digitar (blur)
-                // e para quando ele selecionar uma data no calendário (onChange)
+ 
                 instance.set('onChange', function() {
                     document.getElementById('data_nascimento').dispatchEvent(new Event('change'));
                 });
                 
                 dataInputVisivel.addEventListener('blur', function() {
-                    // Quando o usuário sai do campo, o flatpickr formata o valor
-                    // e nós disparamos o 'change' no campo original
+ 
                     document.getElementById('data_nascimento').dispatchEvent(new Event('change'));
                 });
             }
         });
 
-        // 2. Adiciona a máscara de CPF
+
         const cpfInput = document.getElementById('cpf');
         if (cpfInput) {
-            cpfInput.setAttribute('maxlength', '14'); // 000.000.000-00
+            cpfInput.setAttribute('maxlength', '14'); 
             cpfInput.addEventListener('input', formatarCPF);
         }
 
-        // 3. Adiciona a máscara de RG
+
         const rgInput = document.getElementById('rg');
         if (rgInput) {
-            rgInput.setAttribute('maxlength', '12'); // 00.000.000-0
+            rgInput.setAttribute('maxlength', '12'); 
             rgInput.addEventListener('input', formatarRG);
         }
         
-        // 4. Adiciona a máscara de Telefone (Aluno)
+
         const telInput = document.getElementById('telefone');
         if (telInput) {
             telInput.addEventListener('input', formatarTelefone);
         }
         
-        // 5. Adiciona a máscara de Telefone (Responsável)
+
         const telResponsavelInput = document.getElementById('telefone_responsavel');
         if (telResponsavelInput) {
             telResponsavelInput.addEventListener('input', formatarTelefone);
@@ -586,13 +573,13 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <script>
-// NOVO SCRIPT PARA DATATABLES
+
 document.addEventListener('DOMContentLoaded', function() {
     if (typeof jQuery !== 'undefined') {
         jQuery(document).ready(function($) {
             $('#tabelaAlunos').DataTable({
                 "language": {
-                    // Arquivo de tradução oficial do DataTables para PT-BR
+                    
                     "url": "https://cdn.datatables.net/plug-ins/2.0.8/i18n/pt-BR.json" 
                 }
             });
@@ -602,44 +589,39 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <script>
-    // 1. Pega os elementos que acabamos de criar no HTML
+
     const botaoGerar = document.getElementById('btnGerarSenha');
     const inputSenha = document.getElementById('senha');
 
-    // 2. A sua função de gerar senha, "traduzida" para JavaScript
+t
     function gerarSenhaJS(tamanho = 8) {
         const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
         const tamanhoStr = caracteres.length;
         let strAleatorio = '';
 
-        // Em JS, usamos crypto.getRandomValues para segurança
+
         const randomValues = new Uint32Array(tamanho);
         window.crypto.getRandomValues(randomValues);
 
         for (let i = 0; i < tamanho; i++) {
-            // Isso é o equivalente seguro de 'random_int'
+
             const index = randomValues[i] % tamanhoStr;
             strAleatorio += caracteres[index];
         }
         return strAleatorio;
     }
 
-// 3. Adiciona o "ouvinte" de clique no botão
+
     botaoGerar.addEventListener('click', function() {
-        // Quando o botão for clicado:
-        // 1. Gera uma nova senha
+
         const novaSenha = gerarSenhaJS(8);
         
-        // 2. Coloca a senha gerada no campo de input
         inputSenha.value = novaSenha;
         
-        // 3. Muda o tipo para 'text' para o usuário ver a senha
         inputSenha.type = 'text';
 
-        // 4. (NOVO) Desabilita o botão para que só possa ser gerada uma vez
         botaoGerar.disabled = true;
-        botaoGerar.textContent = 'Gerada!'; // Muda o texto do botão
+        botaoGerar.textContent = 'Gerada!'; 
     });
 
-    // (O listener de 'input' foi removido, pois o campo é readonly)
 </script>

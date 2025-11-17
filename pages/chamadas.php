@@ -1,18 +1,15 @@
 <?php
-// Inclui os arquivos de configuração e autenticação.
+
 require_once 'config/database.php';
 require_once 'includes/auth.php';
 
-// Variáveis para guardar mensagens e os resultados do banco.
+
 $message = '';
 $error = '';
-$aulas = []; // Inicia como um array vazio.
+$aulas = []; 
 
 try {
-    // --- PASSO 1: Montar a base da consulta SQL ---
-    // Esta é a parte principal do SELECT que será usada por todos.
-    // Usamos 'aa.*' para pegar todos os campos da tabela 'aulas_agendadas'.
-    // E usamos 'JOINs' para buscar nomes e matrículas de outras tabelas.
+
     $sql = "SELECT aa.*, 
                    u_aluno.nome as aluno_nome, 
                    al.matricula, 
@@ -24,66 +21,61 @@ try {
             LEFT JOIN usuarios u_prof ON p.usuario_id = u_prof.id";
 
 
-    // --- PASSO 2: Adicionar filtros (WHERE) dinamicamente ---
-$where_clauses = []; // Array para guardar as condições
-$params = [];        // Array para guardar os valores
+    // filtros
+$where_clauses = []; 
+$params = [];        
 
-// Pega o status da URL, se não houver, o padrão é 'todos'.
+
 $status_filter = $_GET['status'] ?? 'todos';
 
-// --- MUDANÇA APLICADA AQUI ---
-// Adicionamos a lógica para o novo filtro 'hoje'.
+
 if ($status_filter === 'hoje') {
-    // Se o filtro for 'hoje', buscamos pela data atual.
+
     $where_clauses[] = "aa.data_aula = ?";
-    $params[] = date('Y-m-d'); // Pega a data de hoje no formato do banco
+    $params[] = date('Y-m-d'); 
 } elseif ($status_filter !== 'todos') {
-    // Se for qualquer outro filtro (exceto 'todos'), filtra pelo status.
+
     $where_clauses[] = "aa.status = ?";
     $params[] = $status_filter;
 }
-// Se o filtro for 'todos', nenhuma cláusula de status/data é adicionada.
 
-    // Adiciona um filtro dependendo do tipo de usuário.
+
+
     if (isProfessor()) {
-        // Se for professor, busca apenas as aulas dele.
+        // se for professor, busca apenas as aulas dele
         $stmt_prof_id = executar_consulta($conn, "SELECT id FROM professores WHERE usuario_id = ? LIMIT 1", [$_SESSION['user_id']]);
         $professor = $stmt_prof_id->get_result()->fetch_assoc();
         if ($professor) {
             $where_clauses[] = "aa.professor_id = ?";
             $params[] = $professor['id'];
         } else {
-            $where_clauses[] = "1 = 0"; // Força a não retornar nada se o ID do prof não for achado.
+            $where_clauses[] = "1 = 0"; // Força a não retornar nada se o ID do prof não for achado
         }
     } elseif (isAluno()) {
-        // Se for aluno, busca apenas as aulas dele.
+        // validaçao para buscar apenas as aulas do aluno se a sessao for de aluno
         $stmt_aluno_id = executar_consulta($conn, "SELECT id FROM alunos WHERE usuario_id = ? LIMIT 1", [$_SESSION['user_id']]);
         $aluno = $stmt_aluno_id->get_result()->fetch_assoc();
         if ($aluno) {
             $where_clauses[] = "aa.aluno_id = ?";
             $params[] = $aluno['id'];
         } else {
-             $where_clauses[] = "1 = 0"; // Força a não retornar nada.
+             $where_clauses[] = "1 = 0"; 
         }
     }
-    // Se for admin, não adiciona nenhum filtro de usuário, pois ele pode ver tudo.
 
-    // --- PASSO 3: Juntar tudo e executar a consulta ---
-    
-    // Se tivermos alguma condição no array $where_clauses...
     if (!empty($where_clauses)) {
-        // ...adiciona a palavra 'WHERE' e junta todas as condições com 'AND'.
+
         $sql .= " WHERE " . implode(" AND ", $where_clauses);
     }
     
-    // Adiciona a ordenação no final da consulta.
+
     $sql .= " ORDER BY aa.data_aula DESC, aa.horario_inicio ASC";
     
-    // Executa a consulta final com os parâmetros.
+ 
     $stmt = executar_consulta($conn, $sql, $params);
     
     if ($stmt) {
-        // Pega todos os resultados e guarda no array $aulas.
+
         $aulas = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
         $stmt->close();
     }
@@ -189,14 +181,12 @@ if ($status_filter === 'hoje') {
 </style>
 
 <script>
-// NOVO SCRIPT PARA DATATABLES
 document.addEventListener('DOMContentLoaded', function() {
-    // Usamos o jQuery, que foi carregado no dashboard.php
+
     if (typeof jQuery !== 'undefined') {
         jQuery(document).ready(function($) {
             $('#tabela_chamada').DataTable({
                 "language": {
-                    // Arquivo de tradução oficial do DataTables para PT-BR
                     "url": "https://cdn.datatables.net/plug-ins/2.0.8/i18n/pt-BR.json" 
                 }
             });
@@ -205,5 +195,3 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<script>
-// ... (script existente de máscara de CPF e geração de senha)

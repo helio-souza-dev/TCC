@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = "Por favor, preencha todos os campos obrigatórios.";
     } else {
         try {
-            // Nenhuma alteração necessária aqui. O PHP funciona igual com <select>
+            
             $sql = "INSERT INTO solicitacoes_alteracao (usuario_id, tipo_usuario, campo_solicitado, valor_novo)
                     VALUES (?, ?, ?, ?)";
             

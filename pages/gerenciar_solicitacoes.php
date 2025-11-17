@@ -8,7 +8,7 @@ requireAdmin();
 $message = '';
 $error = '';
 
-// --- Lógica para processar aprovação/rejeição (SÓ ATUALIZA O STATUS) ---
+// logica aprovar/reprovar para atualizar o status
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
     $solicitacao_id = $_POST['solicitacao_id'] ?? null;
@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             executar_consulta($conn, $sql, [$novo_status, $admin_id, $solicitacao_id]);
             $message = "Solicitação $solicitacao_id foi $status_display com sucesso!";
 
-            // AVISO MANUAL: O administrador deve fazer a alteração na página de edição.
+
             if ($action === 'approve') {
                 $message .= " Lembre-se de ir até a página de edição do usuário para aplicar a alteração no cadastro.";
             }
@@ -34,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// --- Lógica para listar solicitações pendentes ---
+// consulta das solicitacoes pendentes
 $sql_listar = "SELECT sa.*, u.nome, u.email, u.id AS usuario_id, u.tipo AS usuario_tipo
                FROM solicitacoes_alteracao sa
                JOIN usuarios u ON sa.usuario_id = u.id
@@ -44,7 +44,7 @@ $sql_listar = "SELECT sa.*, u.nome, u.email, u.id AS usuario_id, u.tipo AS usuar
 $resultado = $conn->query($sql_listar);
 $solicitacoes = $resultado->fetch_all(MYSQLI_ASSOC);
 
-// --- Lógica para listar solicitações resolvidas (últimas 10) ---
+// consulta das ultimas 10 solicitacoes
 $sql_resolvidas = "SELECT sa.*, u.nome, u.email
                    FROM solicitacoes_alteracao sa
                    JOIN usuarios u ON sa.usuario_id = u.id
@@ -109,7 +109,7 @@ $resolvidas = $resultado_resolvidas->fetch_all(MYSQLI_ASSOC);
                                         $edit_page = $user_type === 'aluno' ? 'editar-aluno' : 'editar-prof';
                                         $id_key = $user_type === 'aluno' ? 'aluno_id' : 'professor_id';
                                         
-                                        // Busca o ID específico do Aluno/Professor (p.id ou a.id)
+                                        // busca id do prof/aluno 
                                         $tabela = $user_type === 'aluno' ? 'alunos' : 'professores';
                                         $id_result = executar_consulta($conn, "SELECT id FROM {$tabela} WHERE usuario_id = ?", [$solicitacao['usuario_id']])->get_result()->fetch_assoc();
                                         $edit_id = $id_result['id'] ?? null;
@@ -164,14 +164,12 @@ $resolvidas = $resultado_resolvidas->fetch_all(MYSQLI_ASSOC);
 </div>
 
 <script>
-// NOVO SCRIPT PARA DATATABLES
+
 document.addEventListener('DOMContentLoaded', function() {
-    // Usamos o jQuery, que foi carregado no dashboard.php
     if (typeof jQuery !== 'undefined') {
         jQuery(document).ready(function($) {
             $('#tabela_gerenciamento_solicitacao1').DataTable({
                 "language": {
-                    // Arquivo de tradução oficial do DataTables para PT-BR
                     "url": "https://cdn.datatables.net/plug-ins/2.0.8/i18n/pt-BR.json" 
             
             
@@ -186,26 +184,5 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 </script>
-
-<script>
-// NOVO SCRIPT PARA DATATABLES
-document.addEventListener('DOMContentLoaded', function() {
-    // Usamos o jQuery, que foi carregado no dashboard.php
-    if (typeof jQuery !== 'undefined') {
-        jQuery(document).ready(function($) {
-            $('#tabela_gerenciamento_solicitacao2').DataTable({
-                "language": {
-                    // Arquivo de tradução oficial do DataTables para PT-BR
-                    "url": "https://cdn.datatables.net/plug-ins/2.0.8/i18n/pt-BR.json"
-            
-            
-                }
-            });
-            
-        });
-        
-    }
-    
-});
 
 </script>

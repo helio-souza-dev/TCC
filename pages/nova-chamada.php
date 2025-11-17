@@ -2,16 +2,16 @@
 require_once 'config/database.php';
 require_once 'includes/auth.php';
 
-// Variáveis para mensagens e para carregar as listas de alunos/professores.
+.
 $message = '';
 $error = '';
-$students = [];
+$estudantes = [];
 $professors = [];
 
-// --- LÓGICA 1: PROCESSAR O AGENDAMENTO QUANDO O FORMULÁRIO É ENVIADO ---
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['action'] === 'agendar_aula') {
     
-    // Pega os dados do formulário.
+   
     $aluno_id = $_POST['aluno_id'] ?? '';
     $disciplina = $_POST['disciplina'] ?? '';
     $data_aula = $_POST['data_aula'] ?? '';
@@ -21,7 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['action'] === 'agendar_aula'
     $instrumento = $_POST['instrumento'] ?? '';
     $instrumento_leciona = $_POST['instrumentos_leciona'] ?? '';
     
-    // Validações básicas antes de ir para o banco.
+
     if (empty($aluno_id) || empty($disciplina) || empty($data_aula) || empty($horario_inicio) || empty($horario_fim)) {
         $error = "Todos os campos com * são obrigatórios.";
 
@@ -30,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['action'] === 'agendar_aula'
 
     } else {
         try {
-            // Define o ID do professor.
+           
             $professor_id = null;
             if (isAdmin()) {
                 $professor_id = $_POST['professor_id'] ?? '';
@@ -45,9 +45,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['action'] === 'agendar_aula'
                 throw new Exception("ID do professor não foi encontrado.");
             }
 
-            // --- INÍCIO DA NOVA LÓGICA DE VERIFICAÇÃO DUPLA ---
 
-            // VERIFICAÇÃO 1: CONFLITO DE HORÁRIO PARA O PROFESSOR
+            // validacoes de conflitos horarios prof
             $sql_conflito_prof = "SELECT id FROM aulas_agendadas
                                   WHERE professor_id = ? AND data_aula = ? AND status != 'cancelado'
                                   AND (? < horario_fim AND ? > horario_inicio)";
@@ -58,9 +57,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['action'] === 'agendar_aula'
             if ($stmt_conflito_prof->get_result()->fetch_assoc()) {
                 throw new Exception("Conflito de horário! O professor já tem uma aula neste período.");
             }
-            $stmt_conflito_prof->close(); // Fecha a consulta
+            $stmt_conflito_prof->close(); 
 
-            // VERIFICAÇÃO 2: CONFLITO DE HORÁRIO PARA O ALUNO
+            // validaçao de conflito de horarios aluno
             $sql_conflito_aluno = "SELECT id FROM aulas_agendadas
                                    WHERE aluno_id = ? AND data_aula = ? AND status != 'cancelado'
                                    AND (? < horario_fim AND ? > horario_inicio)";
@@ -71,11 +70,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['action'] === 'agendar_aula'
             if ($stmt_conflito_aluno->get_result()->fetch_assoc()) {
                 throw new Exception("Conflito de horário! O aluno já tem uma aula neste período.");
             }
-            $stmt_conflito_aluno->close(); // Fecha a consulta
+            $stmt_conflito_aluno->close(); 
 
-            // --- FIM DA NOVA LÓGICA DE VERIFICAÇÃO DUPLA ---
+
             
-            // Se passou pelas duas verificações, INSERE a nova aula no banco.
+            
             $sql_insert = "INSERT INTO aulas_agendadas (professor_id, aluno_id, disciplina, data_aula, horario_inicio, horario_fim, observacoes, status)
                            VALUES (?, ?, ?, ?, ?, ?, ?, 'agendado')";
             executar_consulta($conn, $sql_insert, [
@@ -91,16 +90,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $_POST['action'] === 'agendar_aula'
     }
 }
 
-// --- LÓGICA 2: BUSCAR ALUNOS E PROFESSORES PARA PREENCHER O FORMULÁRIO ---
+
 try {
-    // Busca todos os alunos ativos.
+    // busca aluno
     $sql_alunos = "SELECT a.id, a.matricula, u.nome, a.instrumento
                    FROM alunos a JOIN usuarios u ON a.usuario_id = u.id 
                    WHERE u.ativo = 1 ORDER BY u.nome ASC";
     $resultado_alunos = $conn->query($sql_alunos);
-    $students = $resultado_alunos->fetch_all(MYSQLI_ASSOC);
+    $estudantes = $resultado_alunos->fetch_all(MYSQLI_ASSOC);
     
-    // Busca todos os professores ativos.
+    // busca prof
     $sql_professores = "SELECT p.id, u.nome, p.instrumentos_leciona
                         FROM professores p JOIN usuarios u ON p.usuario_id = u.id 
                         WHERE u.ativo = 1 ORDER BY u.nome ASC";
@@ -136,10 +135,10 @@ try {
             <label for="aluno_id">Selecionar Aluno: <span style="color: red;">*</span></label>
             <select id="aluno_id" name="aluno_id" required>
                 <option value="">Escolha um aluno...</option>
-                <?php foreach($students as $student): ?>
-                    <option value="<?php echo htmlspecialchars($student['id']); ?>" <?php echo (isset($_POST['aluno_id']) && $_POST['aluno_id'] == $student['id']) ? 'selected' : ''; ?>>
-                        <?php echo htmlspecialchars($student['nome']); ?> - <?php echo htmlspecialchars($student['matricula'] ?? 'S/N'); ?>
-                        - <?php echo htmlspecialchars($student['instrumento'] ?? 'S/N'); ?>
+                <?php foreach($estudantes as $estudante): ?>
+                    <option value="<?php echo htmlspecialchars($estudante['id']); ?>" <?php echo (isset($_POST['aluno_id']) && $_POST['aluno_id'] == $estudante['id']) ? 'selected' : ''; ?>>
+                        <?php echo htmlspecialchars($estudante['nome']); ?> - <?php echo htmlspecialchars($estudante['matricula'] ?? 'S/N'); ?>
+                        - <?php echo htmlspecialchars($estudante['instrumento'] ?? 'S/N'); ?>
                     </option>
                 <?php endforeach; ?>
             </select>
@@ -214,21 +213,22 @@ try {
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     
-    // Ativa o Tom-Select para o dropdown de Alunos
-    new TomSelect('#aluno_id', {
-        create: false, // Impede que o usuário crie novos alunos por aqui
-        sortField: {
-            field: "text",
-            direction: "asc"
-        },
-        placeholder: "Digite para buscar um aluno..."
-    });
+    //tomselect
+    if (document.getElementById('aluno_id')) {
+        new TomSelect('#aluno_id', {
+            create: false, 
+            sortField: {
+                field: "text",
+                direction: "asc"
+            },
+            placeholder: "Digite para buscar um aluno..."
+        });
+    }
 
-    // Verifica se o dropdown de professor existe na página (para não dar erro)
+    //tomselect
     if (document.getElementById('professor_id')) {
-        // Ativa o Tom-Select para o dropdown de Professores
         new TomSelect('#professor_id', {
-            create: false, // Impede que o usuário crie novos professores
+            create: false, 
             sortField: {
                 field: "text",
                 direction: "asc"
@@ -236,91 +236,92 @@ document.addEventListener('DOMContentLoaded', function() {
             placeholder: "Digite para buscar um professor..."
         });
     }
+
 });
 </script>
 
 <script>
-    // Função pura de JS para formatar data (DD/MM/AAAA)
+
     function formatarDataInput(event) {
         let input = event.target;
-        // Remove tudo que não for dígito
+
         let valor = input.value.replace(/\D/g, '');
         let tamanho = valor.length;
 
-        // Adiciona a primeira barra (DD/)
+ 
         if (tamanho > 2) {
             valor = valor.substring(0, 2) + '/' + valor.substring(2);
         }
-        // Adiciona a segunda barra (DD/MM/)
+
         if (tamanho > 4) {
-            // Limita aos 4 dígitos do ano (total de 10 caracteres: DD/MM/AAAA)
+
             valor = valor.substring(0, 5) + '/' + valor.substring(5, 9); 
         }
         
-        // Atualiza o valor no campo
+
         input.value = valor;
     }
 
-    // Função pura de JS para formatar hora (HH:MM)
+
     function formatarHoraInput(event) {
         let input = event.target;
-        // Remove tudo que não for dígito
+
         let valor = input.value.replace(/\D/g, '');
         let tamanho = valor.length;
 
-        // Adiciona os dois pontos (HH:)
+
         if (tamanho > 2) {
-            // Limita aos 4 dígitos (HH:MM)
+
             valor = valor.substring(0, 2) + ':' + valor.substring(2, 4);
         }
         
-        // Atualiza o valor no campo
+
         input.value = valor;
     }
 
 
 document.addEventListener('DOMContentLoaded', function() {
     
-    // 1. Configura o seletor de DATA (em Português)
+
     flatpickr("#data_aula", {
-        locale: "pt", // Usa a tradução que carregamos
-        dateFormat: "Y-m-d", // Formato que o banco de dados entende
-        altInput: true, // Mostra um formato amigável para o usuário
-        altFormat: "d/m/Y", // Formato amigável
-        minDate: "today", // Impede de agendar aulas no passado
-        allowInput: true, // Permite digitação
+        locale: "pt", 
+        dateFormat: "Y-m-d", 
+        altInput: true, 
+        altFormat: "d/m/Y", 
+        minDate: "today", 
+        allowInput: true,
         
-        // Conecta a máscara e o maxlength
+        
         onReady: function(selectedDates, dateStr, instance) {
             instance.altInput.setAttribute('maxlength', '10');
             instance.altInput.addEventListener('input', formatarDataInput);
         }
     });
 
-    // 2. Configura o seletor de HORÁRIO DE INÍCIO
+    /
     flatpickr("#horario_inicio", {
-        enableTime: true, // Ativa o modo de hora
-        noCalendar: true, // Desativa o calendário
-        dateFormat: "H:i", // Formato 24h
+        enableTime: true, 
+        noCalendar: true, 
+        dateFormat: "H:i", 
         time_24hr: true,
-        allowInput: true, // Permite digitação
+        allowInput: true, 
 
-        // Conecta a máscara e o maxlength
+        
         onReady: function(selectedDates, dateStr, instance) {
             instance.input.setAttribute('maxlength', '5');
             instance.input.addEventListener('input', formatarHoraInput);
         }
     });
     
-    // 3. Configura o seletor de HORÁRIO DE FIM
+
     flatpickr("#horario_fim", {
         enableTime: true,
         noCalendar: true,
         dateFormat: "H:i",
         time_24hr: true,
-        allowInput: true, // Permite digitação
+        allowInput: true, 
 
-        // Conecta a máscara e o maxlength
+
         onReady: function(selectedDates, dateStr, instance) {
             instance.input.setAttribute('maxlength', '5');
             instance.input.addEventListener('input', formatarHoraInput);

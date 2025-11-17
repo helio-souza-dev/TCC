@@ -2,28 +2,44 @@
 require_once 'config/database.php';
 require_once 'includes/auth.php';
 
-// Garante que apenas administradores podem acessar esta página.
+
 if (!isAdmin()) {
     header('Location: dashboard.php');
     exit();
 }
 
-// Variáveis para mensagens e para guardar os dados do professor.
+
 $message = '';
 $error = '';
 $professor = null;
 
-// --- LÓGICA 1: PROCESSAR FORMULÁRIOS ENVIADOS (POST) ---
+function validarCPF(string $cpf): bool
+{
+    $cpf = preg_replace('/[^0-9]/', '', $cpf);
+    if (strlen($cpf) != 11 || preg_match('/(\d)\1{10}/', $cpf)) {
+        return false;
+    }
+    for ($t = 9; $t < 11; $t++) {
+        for ($d = 0, $c = 0; $c < $t; $c++) {
+            $d += $cpf[$c] * (($t + 1) - $c);
+        }
+        $d = ((10 * $d) % 11) % 10;
+        if ($cpf[$c] != $d) {
+            return false;
+        }
+    }
+    return true;
+}
+
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
     $usuario_id = $_POST['usuario_id'] ?? null;
 
-    // AÇÃO: MUDAR A SENHA
+    // muda senha
     if ($action === 'change_password') {
         $newPassword = $_POST['new_password'] ?? '';
         if ($usuario_id && strlen($newPassword) >= 8) {
-            // Criptografa a nova senha.
             $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
             
             $sql = "UPDATE usuarios SET senha = ?, forcar_troca_senha = 1 WHERE id = ?";
@@ -35,52 +51,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    // AÇÃO: ATUALIZAR DADOS DO PROFESSOR
+    //atualizar
     elseif ($action === 'update') {
         $professor_id = $_POST['professor_id'] ?? null;
         
-        // Inicia a transação para garantir a consistência dos dados.
-        iniciar_transacao($conn);
-        try {
-            // 1. Atualiza a tabela 'usuarios'.
-            // *** CORREÇÃO: Adicionado data_nascimento = ? e telefone = ? ***
-            $sql_user = "UPDATE usuarios SET nome=?, email=?, cpf=?, rg=?, data_nascimento=?, telefone=?, cidade=?, endereco=?, complemento=?, ativo=? WHERE id=?";
-            executar_consulta($conn, $sql_user, [
-                $_POST['nome'], $_POST['email'], $_POST['cpf'], $_POST['rg'],
-                $_POST['data_nascimento'], $_POST['telefone'], // <-- Campos adicionados
-                $_POST['cidade'], $_POST['endereco'], $_POST['complemento'],
-                isset($_POST['ativo']) ? 1 : 0,
-                $usuario_id
-            ]);
+        //validar cpf
+        if (empty($_POST['cpf']) || !validarCPF($_POST['cpf'])) {
+            $error = "O CPF informado é inválido.";
+        } else {
 
-            // 2. Atualiza a tabela 'professores'.
-            $sql_prof = "UPDATE professores SET formacao=?, data_contratacao=?, instrumentos_leciona=?, biografia=? WHERE id=?";
-            executar_consulta($conn, $sql_prof, [
-                $_POST['formacao'], $_POST['data_contratacao'], $_POST['instrumentos_leciona'],
-                $_POST['biografia'],
-                $professor_id
-            ]);
+            iniciar_transacao($conn);
+            try {
+                // tabela usuarios
+                $sql_user = "UPDATE usuarios SET nome=?, email=?, cpf=?, rg=?, data_nascimento=?, telefone=?, cidade=?, endereco=?, complemento=?, ativo=? WHERE id=?";
+                executar_consulta($conn, $sql_user, [
+                    $_POST['nome'], $_POST['email'], $_POST['cpf'], $_POST['rg'],
+                    $_POST['data_nascimento'], $_POST['telefone'],
+                    $_POST['cidade'], $_POST['endereco'], $_POST['complemento'],
+                    isset($_POST['ativo']) ? 1 : 0,
+                    $usuario_id
+                ]);
 
-            // Se tudo correu bem, confirma as alterações.
-            confirmar_transacao($conn);
-            $message = 'Dados do professor atualizados com sucesso!';
+                // tabela professores
+                $sql_prof = "UPDATE professores SET formacao=?, data_contratacao=?, instrumentos_leciona=?, biografia=? WHERE id=?";
+                executar_consulta($conn, $sql_prof, [
+                    $_POST['formacao'], $_POST['data_contratacao'], $_POST['instrumentos_leciona'],
+                    $_POST['biografia'],
+                    $professor_id
+                ]);
 
-        } catch (Exception $e) {
-            // Se deu erro, desfaz tudo.
-            reverter_transacao($conn);
-            $error = 'Erro ao atualizar dados: ' . $e->getMessage();
+                confirmar_transacao($conn);
+                $message = 'Dados do professor atualizados com sucesso!';
+
+            } catch (Exception $e) {
+                reverter_transacao($conn);
+                $error = 'Erro ao atualizar dados: ' . $e->getMessage();
+            }
         }
     }
 }
 
 
-// --- LÓGICA 2: CARREGAR DADOS DO PROFESSOR PARA MOSTRAR NO FORMULÁRIO ---
-
-// Pega o ID do professor da URL.
 $professor_id_to_load = $_GET['professor_id'] ?? null;
 
 if ($professor_id_to_load) {
-    // Busca os dados completos do professor usando um JOIN.
     $sql = "SELECT p.*, u.*, p.id AS professor_id, u.id AS usuario_id
             FROM professores p
             JOIN usuarios u ON p.usuario_id = u.id
@@ -89,7 +103,6 @@ if ($professor_id_to_load) {
     $stmt = executar_consulta($conn, $sql, [$professor_id_to_load]);
     
     if ($stmt) {
-        // Guarda os dados no array $professor para usar no HTML.
         $professor = $stmt->get_result()->fetch_assoc();
         $stmt->close();
     }
@@ -117,13 +130,11 @@ if ($professor_id_to_load) {
                 
                 <div class="form-group">
                     <label for="new_password">Nova Senha (mínimo 8 caracteres):</label>
-                    
                     <div style="display: flex; gap: 10px;">
                         <input type="password" id="new_password" name="new_password" required minlength="8" style="flex-grow: 1;" readonly placeholder="Clique em 'Gerar' para criar a senha">
                         <button type="button" id="btnGerarSenhaEdicao" class="btn btn-secondary">Gerar</button>
                     </div>
                 </div>
-                
                 <button type="submit" class="btn btn-warning" onclick="return confirm('Tem certeza que deseja alterar a senha deste usuário?')">Salvar Nova Senha</button>
             </form>
         </div>
@@ -140,8 +151,8 @@ if ($professor_id_to_load) {
                     <div class="form-group"><label for="email">Email:</label><input type="email" id="email" name="email" required value="<?php echo htmlspecialchars($professor['email']); ?>"></div>
                 </div>
                 <div class="form-row">
-                    <div class="form-group"><label for="cpf">CPF:</label><input readonly type="text" id="cpf" name="cpf" required value="<?php echo htmlspecialchars($professor['cpf']); ?>"></div>
-                    <div class="form-group"><label for="rg">RG:</label><input readonly type="text" id="rg" name="rg" value="<?php echo htmlspecialchars($professor['rg'] ?? ''); ?>"></div>
+                    <div class="form-group"><label for="cpf">CPF:</label><input type="text" id="cpf" name="cpf" required value="<?php echo htmlspecialchars($professor['cpf']); ?>"></div>
+                    <div class="form-group"><label for="rg">RG:</label><input type="text" id="rg" name="rg" value="<?php echo htmlspecialchars($professor['rg'] ?? ''); ?>"></div>
                 </div>
                 <div class="form-row">
                     <div class="form-group">
@@ -212,69 +223,46 @@ if ($professor_id_to_load) {
 </div>
 
 <script>
-    // 1. Pega os elementos que acabamos de criar no HTML
-   const botaoGerar = document.getElementById('btnGerarSenhaEdicao'); // <-- ID do novo botão
-   const inputSenha = document.getElementById('new_password');
+    const botaoGerar = document.getElementById('btnGerarSenhaEdicao'); 
+    const inputSenha = document.getElementById('new_password');
 
-    // 2. A sua função de gerar senha, "traduzida" para JavaScript
     function gerarSenhaJS(tamanho = 8) {
         const caracteres = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
         const tamanhoStr = caracteres.length;
         let strAleatorio = '';
-
-        // Em JS, usamos crypto.getRandomValues para segurança
-       // Linha Correta:
-const randomValues = new Uint32Array(tamanho);
+        const randomValues = new Uint32Array(tamanho);
         window.crypto.getRandomValues(randomValues);
-
         for (let i = 0; i < tamanho; i++) {
-            // Isso é o equivalente seguro de 'random_int'
             const index = randomValues[i] % tamanhoStr;
             strAleatorio += caracteres[index];
         }
         return strAleatorio;
     }
 
-    // 3. Adiciona o "ouvinte" de clique no botão
-    if (botaoGerar) { // Verifica se o botão existe
+    if (botaoGerar) { 
         botaoGerar.addEventListener('click', function() {
-            // Quando o botão for clicado:
-            // 1. Gera uma nova senha
-            const novaSenha = gerarSenhaJS(8); // Gera uma senha de 8 caracteres
-            
-            // 2. Coloca a senha gerada no campo de input
-            if(inputSenha) { // Verifica se o input de senha existe
+            const novaSenha = gerarSenhaJS(8); 
+            if(inputSenha) { 
                 inputSenha.value = novaSenha;
-                
-                // 3. Muda o tipo para 'text' para o usuário ver a senha
                 inputSenha.type = 'text';
-
-                // 4. (NOVO) Desabilita o botão para que só possa ser gerada uma vez
                 botaoGerar.disabled = true;
-                botaoGerar.textContent = 'Gerada!'; // Muda o texto do botão
+                botaoGerar.textContent = 'Gerada!'; 
             }
         });
     }
 </script>
 
-
 <script>
-    // Função pura de JS para formatar data (DD/MM/AAAA)
+
     function formatarDataInput(event) {
         let input = event.target;
         let valor = input.value.replace(/\D/g, '');
         let tamanho = valor.length;
-
-        if (tamanho > 2) {
-            valor = valor.substring(0, 2) + '/' + valor.substring(2);
-        }
-        if (tamanho > 4) {
-            valor = valor.substring(0, 5) + '/' + valor.substring(5, 9); 
-        }
+        if (tamanho > 2) { valor = valor.substring(0, 2) + '/' + valor.substring(2); }
+        if (tamanho > 4) { valor = valor.substring(0, 5) + '/' + valor.substring(5, 9); }
         input.value = valor;
     }
 
-    // Função para formatar CPF (000.000.000-00)
     function formatarCPF(event) {
         let input = event.target;
         let value = input.value.replace(/\D/g, '');
@@ -284,76 +272,71 @@ const randomValues = new Uint32Array(tamanho);
         input.value = value;
     }
 
-    // Função para formatar RG (00.000.000-0)
     function formatarRG(event) {
         let input = event.target;
         let value = input.value.replace(/\D/g, '');
         value = value.replace(/^(\d{2})(\d)/, '$1.$2');
         value = value.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
         value = value.replace(/\.(\d{3})(\d)$/, '.$1-$2');
-        input.value = value;
+        input.value = value.substring(0, 12); 
     }
-    
-    // *** FUNÇÃO ADICIONADA ***
-    // Função para formatar Telefone ( (00) 00000-0000 )
+
     function formatarTelefone(event) {
         let input = event.target;
         let value = input.value.replace(/\D/g, '');
         value = value.replace(/^(\d{2})(\d)/g, '($1) $2');
         value = value.replace(/(\d{5})(\d)/, '$1-$2');
-        input.setAttribute('maxlength', '15'); // (00) 00000-0000
+        input.setAttribute('maxlength', '15'); 
         input.value = value;
     }
 
     document.addEventListener('DOMContentLoaded', function() {
         
-        // 1. Configura o seletor de DATA (Contratação)
-        flatpickr("#data_contratacao", {
-            locale: "pt",
-            dateFormat: "Y-m-d",
-            altInput: true,
-            altFormat: "d/m/Y",
-            allowInput: true, // Permite digitação
-            
-            onReady: function(selectedDates, dateStr, instance) {
-                instance.altInput.setAttribute('maxlength', '10');
-                instance.altInput.addEventListener('input', formatarDataInput);
-            }
-        });
-        
-        // *** NOVO: Configura o seletor de DATA (Nascimento) ***
-        flatpickr("#data_nascimento", {
-            locale: "pt",
-            dateFormat: "Y-m-d",
-            altInput: true,
-            altFormat: "d/m/Y",
-            allowInput: true, // Permite digitação
-            
-            onReady: function(selectedDates, dateStr, instance) {
-                instance.altInput.setAttribute('maxlength', '10');
-                instance.altInput.addEventListener('input', formatarDataInput);
-            }
-        });
+        //calendario contratacao
+        if (typeof flatpickr !== 'undefined') {
+            flatpickr("#data_contratacao", {
+                locale: "pt",
+                dateFormat: "Y-m-d",
+                altInput: true,
+                altFormat: "d/m/Y",
+                allowInput: true,
+                onReady: function(selectedDates, dateStr, instance) {
+                    instance.altInput.setAttribute('maxlength', '10');
+                    instance.altInput.addEventListener('input', formatarDataInput);
+                }
+            });
+            //calendario nascimento
+            flatpickr("#data_nascimento", {
+                locale: "pt",
+                dateFormat: "Y-m-d",
+                altInput: true,
+                altFormat: "d/m/Y",
+                allowInput: true,
+                onReady: function(selectedDates, dateStr, instance) {
+                    instance.altInput.setAttribute('maxlength', '10');
+                    instance.altInput.addEventListener('input', formatarDataInput);
+                }
+            });
+        } else {
+            console.warn('Flatpickr não foi carregado. Verifique o dashboard.php.');
+        }
 
-        // 2. Adiciona a máscara de CPF
+
         const cpfInput = document.getElementById('cpf');
         if (cpfInput) {
-            cpfInput.setAttribute('maxlength', '14'); // 000.000.000-00
+            cpfInput.setAttribute('maxlength', '14'); 
             cpfInput.addEventListener('input', formatarCPF);
         }
 
-        // 3. Adiciona a máscara de RG
         const rgInput = document.getElementById('rg');
         if (rgInput) {
-            rgInput.setAttribute('maxlength', '12'); // 00.000.000-0
+            rgInput.setAttribute('maxlength', '12'); 
             rgInput.addEventListener('input', formatarRG);
         }
         
-        // 4. *** NOVO: Adiciona a máscara de Telefone ***
         const telInput = document.getElementById('telefone');
         if (telInput) {
             telInput.addEventListener('input', formatarTelefone);
         }
-        
     });
 </script>

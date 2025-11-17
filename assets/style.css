@@ -1,9 +1,5 @@
-/* =================================================================
-   ARQUIVO DE ESTILO GLOBAL - TEMA AZUL/ROXO (BASEADO EM v_azul.css)
-   ================================================================= */
-
 :root {
-  /* Paleta de cores extraída de v_azul.css */
+
   --color-black: #000000;
   --color-purple: #8b7cc8;
   --color-purple-light: #a594d1;
@@ -13,23 +9,23 @@
   --color-white: #ffffff;
   --color-gray-light-text: #f8f9fa;
   --color-gray-medium: #8c9196;
-  --color-gray-dark-bg: #495057; /* Fundo de input */
+  --color-gray-dark-bg: #495057; 
   --color-border-light: #dee2e6;
   --color-success: #28a745;
   --color-danger: #dc3545;
   --color-warning: #ffc107;
 
-  /* Variáveis semânticas para o tema */
+  
   --theme-body-bg: linear-gradient(
     rgba(0, 0, 0, 0.75),
     rgba(0, 0, 0, 0.9)
-  ); /* Fundo do BODY (de v_azul.css) */
+  ); 
   --theme-dashboard-bg: linear-gradient(
     135deg,
     #1a1a2e 0%,
     #16213e 50%,
     #0f3460 100%
-  ); /* Fundo do DASHBOARD (de v_azul.css) */
+  ); 
   --theme-card-bg: linear-gradient(
     135deg,
     rgba(42, 42, 42, 0.9) 0%,
@@ -61,7 +57,6 @@
   --theme-focus-shadow: rgba(74, 111, 165, 0.3);
 }
 
-/* --- Reset Básico e Configurações Gerais --- */
 * {
   margin: 0;
   padding: 0;
@@ -72,10 +67,10 @@ body {
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
   background: var(
     --theme-body-bg
-  ); /* Fundo GRADIENTE ESCURO (para login, etc) */
-  background-attachment: fixed; /* Para o gradiente não rolar */
+  ); 
+  background-attachment: fixed; 
   min-height: 100vh;
-  color: var(--theme-text-primary); /* Texto branco */
+  color: var(--theme-text-primary); 
   line-height: 1.6;
 }
 
@@ -85,9 +80,6 @@ body {
   padding: 20px;
 }
 
-/* =================================================================
-   ESTILOS DE FORMULÁRIO APRIMORADOS
-   ================================================================= */
 
 .form-row {
   display: flex;
@@ -106,20 +98,20 @@ body {
 .form-section {
   margin-bottom: 30px;
   padding: 25px;
-  background: var(--theme-card-bg); /* Fundo de card de v_azul */
+  background: var(--theme-card-bg); 
   border-radius: 8px;
-  border-left: 4px solid var(--theme-primary-color); /* Borda roxa */
+  border-left: 4px solid var(--theme-primary-color); 
   border: 1px solid var(--theme-border-color);
   backdrop-filter: blur(10px);
 }
 
 .form-section h4 {
   margin-bottom: 20px;
-  color: var(--theme-text-primary); /* Texto branco */
+  color: var(--theme-text-primary); 
   font-size: 16px;
   font-weight: 600;
   padding-bottom: 10px;
-  border-bottom: 1px solid var(--theme-border-color); /* Borda roxa fraca */
+  border-bottom: 1px solid var(--theme-border-color); 
 }
 
 .form-group {
@@ -130,7 +122,7 @@ body {
   display: block;
   margin-bottom: 10px;
   font-weight: 600;
-  color: var(--theme-text-label); /* Texto roxo claro */
+  color: var(--theme-text-label); 
   font-size: 13px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -145,12 +137,12 @@ body {
 .form-group textarea {
   width: 100%;
   padding: 12px 16px;
-  border: 2px solid var(--theme-border-color-strong); /* Borda roxa */
+  border: 2px solid var(--theme-border-color-strong); 
   border-radius: 6px;
   font-size: 16px;
   transition: all 0.3s ease;
-  background: var(--theme-input-bg); /* Fundo cinza escuro */
-  color: var(--theme-text-primary); /* Texto branco */
+  background: var(--theme-input-bg); 
+  color: var(--theme-text-primary); 
 }
 .form-group textarea {
   resize: vertical;
@@ -161,18 +153,18 @@ body {
 .form-group select:focus,
 .form-group textarea:focus {
   outline: none;
-  border-color: var(--theme-border-focus); /* Borda azul escura */
-  box-shadow: 0 0 0 4px var(--theme-focus-shadow); /* Sombra azul */
+  border-color: var(--theme-border-focus); 
+  box-shadow: 0 0 0 4px var(--theme-focus-shadow); 
 }
 
 .form-group small {
   display: block;
   margin-top: 5px;
-  color: var(--theme-text-muted); /* Cinza médio */
+  color: var(--theme-text-muted); 
   font-size: 12px;
 }
 
-/* Estilos para Radio e Checkbox personalizados */
+
 .radio-group,
 .checkbox-group {
   display: flex;
@@ -189,7 +181,7 @@ body {
   font-weight: 500;
   text-transform: none;
   letter-spacing: 0;
-  color: var(--theme-text-secondary); /* Texto cinza claro */
+  color: var(--theme-text-secondary); 
 }
 .radio-group input[type="radio"],
 .checkbox-group input[type="checkbox"] {
@@ -203,7 +195,7 @@ body {
   display: inline-block;
   width: 20px;
   height: 20px;
-  border: 2px solid var(--theme-border-color-strong); /* Borda roxa */
+  border: 2px solid var(--theme-border-color-strong); 
   border-radius: 50%;
   margin-right: 10px;
   transition: all 0.2s ease;
@@ -211,12 +203,12 @@ body {
   background: var(--theme-input-bg);
 }
 .checkbox-group label .custom-checkbox {
-  border-radius: 4px; /* Mantém o checkbox quadrado */
+  border-radius: 4px; 
 }
 .radio-group input:checked + .custom-radio,
 .checkbox-group input:checked + .custom-checkbox {
   border-color: var(--theme-primary-color);
-  background-color: var(--theme-primary-color); /* Fundo roxo */
+  background-color: var(--theme-primary-color); 
 }
 .radio-group input:checked + .custom-radio::after {
   content: "";
@@ -227,7 +219,7 @@ body {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--color-white); /* Miolo branco */
+  background: var(--color-white); 
 }
 .checkbox-group input:checked + .custom-checkbox::after {
   content: "✔";
@@ -235,13 +227,11 @@ body {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  color: var(--color-white); /* Checkmark branco */
+  color: var(--color-white); 
   font-size: 12px;
 }
 
-/* =================================================================
-   ESTILOS DE BOTÃO APRIMORADOS
-   ================================================================= */
+
 .btn {
   padding: 12px 24px;
   border: none;
@@ -258,7 +248,7 @@ body {
 }
 
 .btn-primary {
-  background: var(--theme-primary-gradient); /* Gradiente roxo/azul */
+  background: var(--theme-primary-gradient); 
   color: var(--theme-text-primary);
   padding: 14px 28px;
   border-radius: 8px;
@@ -268,7 +258,7 @@ body {
 .btn-primary:hover,
 .btn:hover {
   transform: translateY(-3px);
-  box-shadow: 0 5px 15px rgba(107, 70, 193, 0.4); /* Sombra roxa de v_azul */
+  box-shadow: 0 5px 15px rgba(107, 70, 193, 0.4); 
 }
 .btn-primary:hover {
   background: linear-gradient(
@@ -317,11 +307,11 @@ body {
 
 .btn-outline {
   background: transparent;
-  color: var(--theme-primary-color); /* Roxo */
-  border: 2px solid var(--theme-primary-color); /* Roxo */
+  color: var(--theme-primary-color); 
+  border: 2px solid var(--theme-primary-color); 
 }
 .btn-outline:hover {
-  background: var(--theme-primary-color); /* Roxo */
+  background: var(--theme-primary-color); 
   color: var(--theme-text-primary);
 }
 .btn-sm {
@@ -329,11 +319,7 @@ body {
   font-size: 14px;
 }
 
-/* =================================================================
-   LAYOUT E COMPONENTES GERAIS (Dashboard, Card, Tabela, etc.)
-   ================================================================= */
 
-/* Login Styles */
 .login-container {
   display: flex;
   justify-content: center;
@@ -342,35 +328,35 @@ body {
   padding: 20px;
 }
 .login-form {
-  background: var(--theme-input-bg); /* Fundo cinza escuro */
+  background: var(--theme-input-bg); 
   padding: 40px;
   border-radius: 8px;
-  box-shadow: 0 15px 35px rgba(107, 70, 193, 0.5); /* Sombra roxa */
+  box-shadow: 0 15px 35px rgba(107, 70, 193, 0.5); 
   width: 100%;
   max-width: 400px;
-  border: 1px solid var(--theme-border-color-strong); /* Borda roxa */
+  border: 1px solid var(--theme-border-color-strong); 
   backdrop-filter: blur(6px);
 }
 .login-form h2 {
   text-align: center;
   margin-bottom: 30px;
-  color: var(--theme-secondary-color); /* Azul escuro */
+  color: var(--theme-secondary-color); 
   font-size: 28px;
   font-weight: 600;
 }
 
-/* Dashboard Styles */
+
 .dashboard {
   background: var(
     --theme-dashboard-bg
-  ); /* Fundo GRADIENTE AZUL/ROXO (para páginas internas) */
+  ); 
   min-height: 100vh;
 }
 .header {
-  background: var(--theme-header-bg); /* Fundo de header de v_azul */
+  background: var(--theme-header-bg); 
   color: var(--theme-text-primary);
   padding: 20px 0;
-  box-shadow: 0 4px 20px rgba(139, 124, 200, 0.3); /* Sombra roxa */
+  box-shadow: 0 4px 20px rgba(139, 124, 200, 0.3); 
   backdrop-filter: blur(10px);
 }
 .header-content {
@@ -395,9 +381,9 @@ body {
   border-radius: 25px;
 }
 .nav-menu {
-  background: var(--theme-header-bg); /* Fundo de header de v_azul */
+  background: var(--theme-header-bg);
   padding: 0;
-  border-bottom: 1px solid var(--theme-border-color); /* Borda roxa fraca */
+  border-bottom: 1px solid var(--theme-border-color); 
   backdrop-filter: blur(10px);
 }
 .nav-menu ul {
@@ -411,7 +397,7 @@ body {
 }
 .nav-menu a {
   text-decoration: none;
-  color: var(--theme-text-secondary); /* Cinza claro */
+  color: var(--theme-text-secondary); 
   font-weight: 500;
   padding: 18px 30px;
   border-radius: 0;
@@ -420,7 +406,7 @@ body {
 }
 .nav-menu a:hover,
 .nav-menu a.active {
-  background: var(--theme-primary-gradient); /* Gradiente roxo/azul */
+  background: var(--theme-primary-gradient); 
   color: var(--theme-text-primary);
 }
 .main-content {
@@ -429,9 +415,9 @@ body {
   margin: 0 auto;
 }
 .card {
-  background: var(--theme-card-bg); /* Fundo de card de v_azul */
+  background: var(--theme-card-bg); 
   border-radius: 15px;
-  box-shadow: 0 8px 25px rgba(139, 124, 200, 0.2); /* Sombra roxa */
+  box-shadow: 0 8px 25px rgba(139, 124, 200, 0.2); 
   padding: 30px;
   margin-bottom: 30px;
   border: 1px solid var(--theme-border-color);
@@ -440,14 +426,14 @@ body {
 .card h3 {
   margin-top: 0;
   margin-bottom: 25px;
-  color: var(--theme-text-primary); /* Texto branco */
-  border-bottom: 2px solid var(--theme-text-label); /* Borda roxa clara */
+  color: var(--theme-text-primary); 
+  border-bottom: 2px solid var(--theme-text-label); 
   padding-bottom: 15px;
   font-weight: 700;
   font-size: 20px;
 }
 
-/* Table Styles */
+
 .table-responsive {
   overflow-x: auto;
   margin: 20px 0;
@@ -463,10 +449,10 @@ body {
 .table td {
   padding: 12px 16px;
   text-align: left;
-  border-bottom: 1px solid var(--theme-border-color); /* Borda roxa fraca */
+  border-bottom: 1px solid var(--theme-border-color); 
 }
 .table th {
-  background: var(--theme-secondary-color); /* Azul escuro */
+  background: var(--theme-secondary-color); 
   color: var(--theme-text-primary);
   font-weight: 600;
   font-size: 14px;
@@ -475,16 +461,16 @@ body {
 .table td {
   padding: 16px;
   vertical-align: middle;
-  color: var(--theme-text-secondary); /* Cinza claro */
-  background: rgba(42, 42, 42, 0.5); /* Fundo de célula de v_azul */
+  color: var(--theme-text-secondary); 
+  background: rgba(42, 42, 42, 0.5); 
 }
 .table tbody tr:hover {
-  background: rgba(139, 124, 200, 0.2); /* Hover roxo de v_azul */
+  background: rgba(139, 124, 200, 0.2); 
   transform: scale(1.01);
   transition: all 0.2s ease;
 }
 
-/* Alert Styles */
+
 .alert {
   padding: 16px 20px;
   border-radius: 8px;
@@ -521,7 +507,7 @@ body {
   border-left-color: var(--theme-secondary-color);
 }
 
-/* Status badges */
+
 .status-badge {
   padding: 4px 12px;
   border-radius: 20px;
@@ -557,7 +543,7 @@ body {
   color: var(--color-white);
 }
 
-/* Empty state */
+
 .empty-state {
   text-align: center;
   padding: 60px 20px;
@@ -576,9 +562,6 @@ body {
   font-size: 14px;
 }
 
-/* =================================================================
-   CLASSES UTILITÁRIAS
-   ================================================================= */
 .text-center {
   text-align: center;
 }
@@ -604,9 +587,7 @@ body {
   gap: 10px;
 }
 
-/* =================================================================
-   RESPONSIVIDADE
-   ================================================================= */
+
 @media (max-width: 768px) {
   .header-content {
     flex-direction: column;
@@ -632,32 +613,28 @@ body {
   }
 }
 
-/* =================================================================
-   SOBRESCRITAS DO DATATABLES (Tema Azul/Roxo Corrigido)
-   ================================================================= */
 
-/* Força cabeçalho azul (do tema) */
 table.dataTable thead th {
-  background: var(--theme-secondary-color) !important; /* Azul escuro */
+  background: var(--theme-secondary-color) !important; 
   color: var(--theme-text-primary) !important;
   border-bottom: none !important;
 }
 
-/* Ajusta as linhas (texto e fundo) */
+
 table.dataTable tbody td {
   border-bottom: 1px solid var(--theme-border-color) !important;
-  color: var(--theme-text-secondary) !important; /* Texto cinza claro */
-  background: rgba(42, 42, 42, 0.5) !important; /* Fundo de célula escuro */
+  color: var(--theme-text-secondary) !important; 
+  background: rgba(42, 42, 42, 0.5) !important; 
 }
 
 /* Hover visual roxo (do tema) */
 table.dataTable tbody tr:hover td,
 table.dataTable tbody tr:hover {
-  background: rgba(139, 124, 200, 0.2) !important; /* Roxo transparente */
+  background: rgba(139, 124, 200, 0.2) !important; 
   transform: scale(1.01);
 }
 
-/* Textos do Wrapper (Showing entries, Search, etc) */
+
 .dataTables_wrapper {
   margin-top: 20px;
   color: var(--theme-text-secondary) !important;
@@ -667,7 +644,6 @@ table.dataTable tbody tr:hover {
   color: var(--theme-text-secondary) !important;
 }
 
-/* Dropdown "Show entries" */
 .dataTables_wrapper select {
   background: var(--theme-input-bg) !important;
   color: var(--theme-text-primary) !important;
@@ -679,9 +655,7 @@ table.dataTable tbody tr:hover {
   margin-right: 10px;
 }
 
-/* =====================================================================
-   BOTÕES DO DATATABLES (Exportação, etc.)
-   ===================================================================== */
+
 .dataTables_wrapper .dt-buttons button.dt-button,
 .dataTables_wrapper .dt-buttons .btn,
 button.dt-button {
@@ -710,9 +684,7 @@ button.dt-button:hover {
 
 
 
-/* =====================================================================
-   BOTÃO .btn-info (Se estiver usando dentro da tabela)
-   ===================================================================== */
+
 .btn-info {
   background: transparent !important;
   border: 2px solid var(--color-dark-blue) !important;
@@ -732,37 +704,33 @@ button.dt-button:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 10px rgba(74, 111, 165, 0.3);
 }
-/* =================================================================
-   CORREÇÃO BADGES DE STATUS (ATIVO/INATIVO)
-   ================================================================= */
 
-/* Define o "Ativo" como verde-escuro (da paleta v_azul) */
 .status-active {
-  background: var(--color-success) !important; /* Verde */
+  background: var(--color-success) !important; 
   color: var(--color-white) !important;
 }
 
-/* Define o "Inativo" como vermelho-escuro (da paleta v_azul) */
+
 .status-inactive {
-  background: var(--color-danger) !important; /* Vermelho */
+  background: var(--color-danger) !important; 
   color: var(--color-white) !important;
 }
 
-/* Bônus: Corrige os outros status também para o tema escuro */
+
 .status-agendado {
-  background: var(--color-warning) !important; /* Amarelo */
-  color: #1a1a1a !important; /* Texto preto para ler no amarelo */
+  background: var(--color-warning) !important; 
+  color: #1a1a1a !important; /
 }
 .status-realizado {
-  background: var(--color-success) !important; /* Verde */
+  background: var(--color-success) !important; 
   color: var(--color-white) !important;
 }
 .status-cancelado {
-  background: var(--color-danger) !important; /* Vermelho */
+  background: var(--color-danger) !important; 
   color: var(--color-white) !important;
 }
 
-/* ======== CORREÇÃO DOS BOTÕES DE PAGINAÇÃO DO DATATABLES ======== */
+
 .dataTables_wrapper .dataTables_paginate {
     text-align: center;
     margin-top: 15px;
@@ -780,14 +748,14 @@ button.dt-button:hover {
     transition: all 0.2s ease-in-out;
 }
 
-/* Hover */
+
 .dataTables_wrapper .dataTables_paginate .dt-paging-button:hover:not(.disabled):not(.current) {
     background: linear-gradient(135deg, var(--theme-secondary), var(--theme-primary));
     color: #fff !important;
     transform: scale(1.05);
 }
 
-/* Botão ativo (página atual) */
+
 .dataTables_wrapper .dataTables_paginate .dt-paging-button.current {
     background: linear-gradient(135deg, var(--theme-border-color-strong), var(--theme-primary));
     color: #fff !important;
@@ -796,7 +764,7 @@ button.dt-button:hover {
 }
 
 
-/* Botão desabilitado (ESPECIFICIDADE MÁXIMA - TODAS AS COMBINAÇÕES) */
+
 .dataTables_wrapper .dataTables_paginate .dt-paging-button.disabled.first,
 .dataTables_wrapper .dataTables_paginate .dt-paging-button.disabled.previous,
 .dataTables_wrapper .dataTables_paginate .dt-paging-button.disabled.next,
@@ -829,7 +797,7 @@ span.dt-paging-button.disabled,
     text-decoration: none !important;
 }
 
-/* Forçar também no hover do desabilitado */
+
 .dataTables_wrapper .dataTables_paginate .dt-paging-button.disabled.first:hover,
 .dataTables_wrapper .dataTables_paginate .dt-paging-button.disabled.previous:hover,
 .dataTables_wrapper .dataTables_paginate .dt-paging-button.disabled.next:hover,

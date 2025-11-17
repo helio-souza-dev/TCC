@@ -2,30 +2,30 @@
 require_once 'config/database.php';
 require_once 'includes/auth.php';
 
-// Apenas admin e professor podem acessar esta página.
+
 if (!isAdmin() && !isProfessor()) {
     header("Location: dashboard.php?page=chamadas");
     exit;
 }
 
-// Pega o ID da aula da URL.
+
 $aula_id = $_GET['id'] ?? null;
 $aula = null;
 $error = '';
 
-// Se não houver ID na URL, redireciona de volta com um erro.
+
 if (!$aula_id) {
     $_SESSION['error'] = "ID da aula não fornecido.";
     header("Location: dashboard.php?page=chamadas");
     exit;
 }
 
-// --- LÓGICA 1: PROCESSAR AÇÕES ENVIADAS PELOS FORMULÁRIOS (POST) ---
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
 
     try {
-        // Usa um switch para decidir o que fazer com base na ação.
+        
         switch ($action) {
             case 'marcar_presenca':
                 $sql = "UPDATE aulas_agendadas SET status = 'realizado', presenca = 'presente' WHERE id = ?";
@@ -49,32 +49,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 break;
 
             case 'reagendar_aula':
-                // Pega os novos dados do formulário de reagendamento.
+                // pega os dados novos do formulario
                 $nova_data = $_POST['nova_data'] ?? '';
                 $novo_horario_inicio = $_POST['novo_horario_inicio'] ?? '';
                 $novo_horario_fim = $_POST['novo_horario_fim'] ?? '';
                 $motivo_reagendamento = $_POST['motivo_reagendamento'] ?? '';
 
-                // Busca o ID do aluno e do professor da aula que está sendo editada.
+                
                 $aula_atual = executar_consulta($conn, "SELECT aluno_id, professor_id FROM aulas_agendadas WHERE id = ?", [$aula_id])->get_result()->fetch_assoc();
                 $aluno_id = $aula_atual['aluno_id'];
                 $professor_id = $aula_atual['professor_id'];
 
-                // VERIFICAÇÃO 1: CONFLITO PARA O PROFESSOR (ignorando a aula atual)
+                // validaçoes de conflito prof
                 $sql_conflito_prof = "SELECT id FROM aulas_agendadas WHERE id != ? AND professor_id = ? AND data_aula = ? AND status != 'cancelado' AND (? < horario_fim AND ? > horario_inicio)";
                 $stmt_prof = executar_consulta($conn, $sql_conflito_prof, [$aula_id, $professor_id, $nova_data, $novo_horario_inicio, $novo_horario_fim]);
                 if ($stmt_prof->get_result()->fetch_assoc()) {
                     throw new Exception("Conflito de horário! O professor já tem outra aula neste período.");
                 }
 
-                // VERIFICAÇÃO 2: CONFLITO PARA O ALUNO (ignorando a aula atual)
+                // validaçoes de conflito aluno
                 $sql_conflito_aluno = "SELECT id FROM aulas_agendadas WHERE id != ? AND aluno_id = ? AND data_aula = ? AND status != 'cancelado' AND (? < horario_fim AND ? > horario_inicio)";
                 $stmt_aluno = executar_consulta($conn, $sql_conflito_aluno, [$aula_id, $aluno_id, $nova_data, $novo_horario_inicio, $novo_horario_fim]);
                 if ($stmt_aluno->get_result()->fetch_assoc()) {
                     throw new Exception("Conflito de horário! O aluno já tem outra aula neste período.");
                 }
 
-                // Se passou nas verificações, atualiza a aula.
+                // atualiza caso tenha passado por todas as validacoes
                 $sql_update = "UPDATE aulas_agendadas SET data_aula = ?, horario_inicio = ?, horario_fim = ?, motivo_reagendamento = ?, data_reagendamento = NOW() WHERE id = ?";
                 executar_consulta($conn, $sql_update, [$nova_data, $novo_horario_inicio, $novo_horario_fim, $motivo_reagendamento, $aula_id]);
                 
@@ -82,19 +82,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 break;
         }
 
-        // Se qualquer ação foi bem-sucedida, redireciona de volta para a lista de chamadas.
+        
         header("Location: dashboard.php?page=chamadas");
         exit;
 
     } catch (Exception $e) {
-        // Se deu algum erro (especialmente no reagendamento), a página não redireciona e mostra o erro.
+        
         $error = $e->getMessage();
     }
 }
 
 
-// --- LÓGICA 2: CARREGAR DADOS DA AULA PARA MOSTRAR NA PÁGINA ---
-// Este código roda sempre que a página é carregada.
+//carregar dados da aula para mostrar no form
 try {
     $sql = "SELECT aa.*, u_aluno.nome as aluno_nome
             FROM aulas_agendadas aa
@@ -190,88 +189,87 @@ try {
 
 
 <script>
-    // Função pura de JS para formatar data (DD/MM/AAAA)
+
     function formatarDataInput(event) {
         let input = event.target;
-        // Remove tudo que não for dígito
+
         let valor = input.value.replace(/\D/g, '');
         let tamanho = valor.length;
 
-        // Adiciona a primeira barra (DD/)
+
         if (tamanho > 2) {
             valor = valor.substring(0, 2) + '/' + valor.substring(2);
         }
-        // Adiciona a segunda barra (DD/MM/)
+
         if (tamanho > 4) {
-            // Limita aos 4 dígitos do ano (total de 10 caracteres: DD/MM/AAAA)
+
             valor = valor.substring(0, 5) + '/' + valor.substring(5, 9); 
         }
         
-        // Atualiza o valor no campo
+     
         input.value = valor;
     }
 
-    // <-- NOVA FUNÇÃO para formatar hora (HH:MM)
+
     function formatarHoraInput(event) {
         let input = event.target;
-        // Remove tudo que não for dígito
+
         let valor = input.value.replace(/\D/g, '');
         let tamanho = valor.length;
 
-        // Adiciona os dois pontos (HH:)
+
         if (tamanho > 2) {
-            // Limita aos 4 dígitos (HH:MM)
+
             valor = valor.substring(0, 2) + ':' + valor.substring(2, 4);
         }
         
-        // Atualiza o valor no campo
+     
         input.value = valor;
     }
 
     document.addEventListener('DOMContentLoaded', function() {
         
-        // 1. Configura o seletor de DATA (em Português)
+
         flatpickr("#nova_data", {
-            locale: "pt", // Usa a tradução
-            dateFormat: "Y-m-d", // Formato do banco
+            locale: "pt", 
+            dateFormat: "Y-m-d", 
             altInput: true,
-            altFormat: "d/m/Y", // Formato amigável
+            altFormat: "d/m/Y", 
             minDate: "today",
-            allowInput: true, // <-- CORRIGIDO
+            allowInput: true, 
             
-            // <-- CONECTA A FUNÇÃO DE FORMATAR DATA
+
             onReady: function(selectedDates, dateStr, instance) {
-                // instance.altInput é o campo de data VISÍVEL (DD/MM/AAAA)
+
                 instance.altInput.setAttribute('maxlength', '10');
                 instance.altInput.addEventListener('input', formatarDataInput);
             }
         });
 
-        // 2. Configura o seletor de HORÁRIO DE INÍCIO
+
         flatpickr("#novo_horario_inicio", {
             enableTime: true,
             noCalendar: true,
             dateFormat: "H:i",
             time_24hr: true,
-            allowInput: true, // <-- CORRIGIDO
+            allowInput: true, 
             
-            // <-- CONECTA A FUNÇÃO DE FORMATAR HORA
+  
             onReady: function(selectedDates, dateStr, instance) {
-                // instance.input é o campo de hora (não tem altInput)
                 instance.input.setAttribute('maxlength', '5');
                 instance.input.addEventListener('input', formatarHoraInput);
             }
         });
         
-        // 3. Configura o seletor de HORÁRIO DE FIM
+
         flatpickr("#novo_horario_fim", {
             enableTime: true,
             noCalendar: true,
             dateFormat: "H:i",
             time_24hr: true,
-            allowInput: true, // <-- CORRIGIDO
+            allowInput: true, 
             
-            // <-- CONECTA A FUNÇÃO DE FORMATAR HORA
+
             onReady: function(selectedDates, dateStr, instance) {
                 instance.input.setAttribute('maxlength', '5');
                 instance.input.addEventListener('input', formatarHoraInput);

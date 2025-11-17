@@ -1,13 +1,12 @@
 <?php
-// Inclui o guardião. 
-// Ele vai garantir que só usuários logados E que precisam trocar a senha cheguem aqui.
+
 require_once 'config/database.php';
 require_once 'includes/auth.php'; 
 
 $error = '';
 $message = '';
 
-// Verifica se o formulário foi enviado
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $nova_senha = $_POST['nova_senha'] ?? '';
     $confirma_senha = $_POST['confirma_senha'] ?? '';
@@ -18,7 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($nova_senha !== $confirma_senha) {
         $error = "As senhas não conferem. Tente novamente.";
     } else {
-        // Sucesso! Atualizar o banco
+        
         try {
             $hashedPassword = password_hash($nova_senha, PASSWORD_DEFAULT);
             $user_id = $_SESSION['user_id'];
@@ -28,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $message = "Senha alterada com sucesso! Você será redirecionado para o painel em 3 segundos.";
             
-            // Redireciona para o dashboard após um pequeno delay
+            
             header("Refresh: 3; url=dashboard.php");
 
         } catch (Exception $e) {
@@ -44,10 +43,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Troca Obrigatória de Senha</title>
     
-    <!-- Link para o CSS principal, o mesmo do login.php -->
+
     <link rel="stylesheet" href="assets/style.css"> 
     
-    <!-- Estilos exatos da página login.php para manter a consistência visual -->
+
     <style>
         body {
           margin: 0;
@@ -56,13 +55,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           display: flex;
           justify-content: center;
           align-items: center;
-          /* Fundo com imagem (o mesmo do login.php) */
+
           background: linear-gradient(135deg, rgba(139, 124, 200, 0.8), rgba(74, 111, 165, 0.9)),
           url("img/fundo_login.png") ;
           background-size: cover;
         }
 
-        /* Estilo "glass" do formulário (o mesmo do login.php) */
+
         .login-form {
           background: linear-gradient(135deg, rgba(42, 42, 42, 0.95) 0%, rgba(26, 26, 46, 0.95) 100%);
           padding: 40px;
@@ -70,8 +69,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           box-shadow: 0 15px 35px rgba(139, 124, 200, 0.4);
           width: 100%;
           max-width: 400px;
-          text-align: center; /* Centralizar tudo */
-          backdrop-filter: blur(15px); /* Efeito "glass" */
+          text-align: center; 
+          backdrop-filter: blur(15px); 
           border: 1px solid rgba(139, 124, 200, 0.3);
         }
 
@@ -82,7 +81,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
         }
 
-        /* Logo (o mesmo do login.php) */
+
         .login-form .logo {
           margin-bottom: 20px;
         }
@@ -94,7 +93,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           background: rgba(255, 255, 255, 0.1);
         }
 
-        .login-form p.subtitle { /* Alvo específico no subtítulo */
+        .login-form p.subtitle { 
           margin-bottom: 25px;
           font-size: 14px;
           color: #e0e0e0;
@@ -105,44 +104,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           text-align: left;
         }
 
-        /* Estilo dos labels (o mesmo do login.php) */
+
         .form-group label {
           font-weight: 600;
-          color: #a594d1; /* --color-purple-light */
+          color: #a594d1; 
           display: block;
           margin-bottom: 8px;
-          text-transform: none; /* Remove o uppercase do style.css */
+          text-transform: none; 
         }
 
-        /* Estilo dos inputs (o mesmo do login.php) */
         .form-group input {
           width: 100%;
           padding: 12px;
-          border: 2px solid rgba(139, 124, 200, 0.5); /* Borda roxa fraca */
+          border: 2px solid rgba(139, 124, 200, 0.5); 
           border-radius: 8px;
-          background: rgba(42, 42, 42, 0.8); /* Fundo escuro transparente */
+          background: rgba(42, 42, 42, 0.8); 
           color: #fff;
           font-size: 16px;
           transition: all 0.3s ease;
         }
         
         .form-group input:focus {
-          border-color: #a594d1; /* Borda roxa clara no foco */
+          border-color: #a594d1; 
           box-shadow: 0 0 0 3px rgba(139, 124, 200, 0.2);
           outline: none;
         }
-        
-        /* Alertas de erro/sucesso (já vêm do style.css) */
+
     </style>
 </head>
 <body>
-    <!-- Estrutura do body baseada no login.php -->
+
     <div class="login-container">
         
-        <!-- 
-            O formulário agora é o próprio "card",
-            exatamente como na página de login.
-        -->
+
         <form class="login-form" method="POST">
             
             <div class="logo">
@@ -159,7 +153,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div>
             <?php endif; ?>
 
-            <?php if(empty($message)): // Só mostra o formulário se a senha ainda não foi alterada ?>
+            <?php if(empty($message)):  ?>
                 <div class="form-group">
                     <label for="nova_senha">Nova Senha (mín. 8 caracteres):</label>
                     <input type="password" id="nova_senha" name="nova_senha" required>
@@ -168,7 +162,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <label for="confirma_senha">Confirme a Nova Senha:</label>
                     <input type="password" id="confirma_senha" name="confirma_senha" required>
                 </div>
-                <!-- O botão usará o estilo .btn-primary do style.css -->
+
                 <button type="submit" class="btn btn-primary" style="width: 100%;">Salvar Nova Senha</button>
             <?php endif; ?>
             

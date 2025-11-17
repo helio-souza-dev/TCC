@@ -28,16 +28,16 @@ try {
     $error = 'Erro ao carregar solicitações: ' . $e->getMessage();
 }
 
-// Função auxiliar para determinar a classe do status
+// determinar status da solicitaçao
 function getStatusClass($status) {
     switch ($status) {
         case 'aprovado':
-            return 'status-realizado'; // Verde
+            return 'status-realizado'; 
         case 'rejeitado':
-            return 'status-cancelado'; // Vermelho
+            return 'status-cancelado'; 
         case 'pendente':
         default:
-            return 'status-agendado'; // Amarelo/Laranja
+            return 'status-agendado';
     }
 }
 ?>
@@ -104,8 +104,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 "language": {
                     "url": "https://cdn.datatables.net/plug-ins/2.0.8/i18n/pt-BR.json" 
                 }
-                // As chaves 'dom' e 'buttons' foram removidas.
-                // Isso restaura o layout padrão (Busca, Paginação, etc.)
+
             });
         });
     }
