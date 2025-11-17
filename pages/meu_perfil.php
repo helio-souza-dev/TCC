@@ -211,7 +211,15 @@ try {
                 <div class="form-group"><label>Tipo de Aula Desejada:</label><input type="text" name="tipo_aula_desejada" value="<?php echo htmlspecialchars($userData['tipo_aula_desejada'] ?? ''); ?>"></div>
             </div>
             <div class="form-row">
-                <div class="form-group"><label>Preferência de Horário:</label><input type="text" name="preferencia_horario" value="<?php echo htmlspecialchars($userData['preferencia_horario'] ?? ''); ?>"></div>
+               <div class="form-group">
+    <label>Preferência de Horário:</label>
+    <select name="preferencia_horario">
+        <option value="">Selecione...</option>
+        <option value="Manhã" <?php echo ($userData['preferencia_horario'] == 'Manhã') ? 'selected' : ''; ?>>Manhã</option>
+        <option value="Tarde" <?php echo ($userData['preferencia_horario'] == 'Tarde') ? 'selected' : ''; ?>>Tarde</option>
+        <option value="Noite" <?php echo ($userData['preferencia_horario'] == 'Noite') ? 'selected' : ''; ?>>Noite</option>
+    </select>
+</div>
                 <div class="form-group">
                     <label>Possui Instrumento?</label>
                     <div class="radio-group">
@@ -425,6 +433,12 @@ try {
                     document.getElementById('data_nascimento').dispatchEvent(new Event('change'));
                 });
             }
+            flatpickr("#data_contratacao", {
+        enableTime: true, 
+        noCalendar: true, 
+        dateFormat: "H:i", 
+        time_24hr: true,
+        allowInput: true, 
         });
 
     

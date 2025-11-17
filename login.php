@@ -29,7 +29,7 @@ if($_POST) {
 
             header('refresh:2;url=dashboard.php');
         } else {
-.
+
             $erro = 'Email ou senha incorretos! Verifique suas credenciais.';
         }
     }

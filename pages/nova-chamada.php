@@ -298,7 +298,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    /
+    
     flatpickr("#horario_inicio", {
         enableTime: true, 
         noCalendar: true, 
