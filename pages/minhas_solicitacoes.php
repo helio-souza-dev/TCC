@@ -11,7 +11,7 @@ $error = '';
 $solicitacoes = [];
 
 try {
-    // Busca todas as solicitações feitas pelo ID do usuário logado
+    // pega as solicitaçoes buscadas pelo id logado
     $sql_listar = "SELECT *
                    FROM solicitacoes_alteracao
                    WHERE usuario_id = ?

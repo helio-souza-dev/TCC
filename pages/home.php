@@ -2,37 +2,44 @@
 require_once 'config/database.php';
 require_once 'includes/auth.php';
 
-// Variáveis para guardar os dados que virão do banco.
+// dados q vão ser buscados no bd e mostrados no cards
 $stats = ['professores' => 0, 'alunos' => 0, 'aulas_hoje' => 0];
 $recent_calls = [];
 $error = '';
 
 try {
-    // Pega o ID do usuário logado e a data de hoje.
+    
+
     $user_id = $_SESSION['user_id'];
     $today = date('Y-m-d');
 
-    // --- LÓGICA PARA BUSCAR AS ESTATÍSTICAS (OS CARDS) ---
+    // buscar as estatisticas e mostrar nos CARDS
+
     if (isAdmin()) {
-        // Se for admin, conta tudo.
+
+        // se for adm ele conta tudo
+
         $stats['professores'] = $conn->query("SELECT COUNT(id) FROM usuarios WHERE tipo = 'professor' AND ativo = 1")->fetch_column();
         $stats['alunos'] = $conn->query("SELECT COUNT(id) FROM usuarios WHERE tipo = 'aluno' AND ativo = 1")->fetch_column();
         $stats['aulas_hoje'] = $conn->query("SELECT COUNT(id) FROM aulas_agendadas WHERE data_aula = '$today'")->fetch_column();
     } elseif (isProfessor()) {
-        // Se for professor, conta apenas as suas aulas de hoje.
+
+        // condicao para mostrar só as aulas do professor caso seja sessao de professor
+
         $stmt = executar_consulta($conn, "SELECT COUNT(id) FROM aulas_agendadas WHERE data_aula = ? AND professor_id = (SELECT id FROM professores WHERE usuario_id = ?)", [$today, $user_id]);
         $stats['aulas_hoje'] = $stmt->get_result()->fetch_column();
     }
-    // Alunos não veem os cards de estatísticas.
+    // aluno n ve card de estatistica
 
 
-    // --- LÓGICA PARA BUSCAR AS ÚLTIMAS 5 AULAS ---
+    // buscar ultimas 5 aulas
+
     $sql_recent = '';
     $params = [];
 
-    // Monta a consulta SQL de acordo com o tipo de usuário.
+
     if (isAdmin()) {
-        // Admin vê tudo.
+        // condição para que o admin veja tudo
 
         $sql_recent = "SELECT aa.data_aula, aa.horario_inicio, aa.disciplina, aa.status, u_aluno.nome AS aluno_nome, u_prof.nome AS professor_nome, aa.observacoes
                        FROM aulas_agendadas aa
@@ -42,7 +49,7 @@ try {
                        LEFT JOIN usuarios u_prof ON p.usuario_id = u_prof.id
                        ORDER BY aa.data_aula DESC, aa.horario_inicio DESC LIMIT 5";
     } elseif (isProfessor()) {
-        // Professor vê as aulas dele.
+        // condição para que o professor veja o conteudo dele
 
         $sql_recent = "SELECT aa.data_aula, aa.horario_inicio, aa.disciplina, aa.status, u_aluno.nome AS aluno_nome, aa.observacoes
                        FROM aulas_agendadas aa
@@ -52,7 +59,7 @@ try {
                        ORDER BY aa.data_aula DESC, aa.horario_inicio DESC LIMIT 5";
         $params[] = $user_id;
     } elseif (isAluno()) {
-        // Aluno vê as aulas dele.
+       //condição para que o aluno veja as conteudo dele
 
         $sql_recent = "SELECT aa.data_aula, aa.horario_inicio, aa.disciplina, aa.status, u_prof.nome as professor_nome, aa.observacoes
                        FROM aulas_agendadas aa
@@ -64,7 +71,7 @@ try {
         $params[] = $user_id;
     }
     
-    // Se uma consulta foi definida, executa e busca os resultados.
+    
     if (!empty($sql_recent)) {
         $stmt_recent = executar_consulta($conn, $sql_recent, $params);
         $recent_calls = $stmt_recent->get_result()->fetch_all(MYSQLI_ASSOC);
@@ -183,14 +190,13 @@ try {
 </style>
 
 <script>
-// NOVO SCRIPT PARA DATATABLES
+
+//data tables
 document.addEventListener('DOMContentLoaded', function() {
-    // Usamos o jQuery, que foi carregado no dashboard.php
     if (typeof jQuery !== 'undefined') {
         jQuery(document).ready(function($) {
             $('#tabela_aulas_home').DataTable({
                 "language": {
-                    // Arquivo de tradução oficial do DataTables para PT-BR
                     "url": "https://cdn.datatables.net/plug-ins/2.0.8/i18n/pt-BR.json" 
                 }
             });
@@ -199,5 +205,3 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<script>
-// ... (script existente de máscara de CPF e geração de senha)

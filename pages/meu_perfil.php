@@ -2,7 +2,7 @@
 require_once 'config/database.php';
 require_once 'includes/auth.php';
 
-requireLogin(); // Garante que o usuário está logado
+requireLogin(); // autenticação de login
 
 $message = '';
 $error = '';
@@ -10,7 +10,7 @@ $userData = null;
 $userType = $_SESSION['user_type'];
 $usuario_id = $_SESSION['user_id'];
 
-// --- LÓGICA DE ATUALIZAÇÃO DE SENHA ---
+// atualizaçao de senha 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'change_password') {
     $currentPassword = $_POST['current_password'] ?? '';
     $newPassword = $_POST['new_password'] ?? '';
@@ -20,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'chang
             throw new Exception("A nova senha deve ter no mínimo 8 caracteres.");
         }
         
-        // 1. Verificar a senha atual
+        // verificar senha atual
         global $conn;
         $sql_check_pass = "SELECT senha FROM usuarios WHERE id = ? LIMIT 1";
         $stmt_check_pass = $conn->prepare($sql_check_pass);
@@ -34,14 +34,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'chang
              throw new Exception("A senha atual fornecida está incorreta.");
         }
 
-        // 2. Atualizar a nova senha
+        // atualizar a senha
         $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
         $sql = "UPDATE usuarios SET senha = ?, forcar_troca_senha = 0 WHERE id = ?";
         executar_consulta($conn, $sql, [$hashedPassword, $usuario_id]);
         
         $message = 'Senha alterada com sucesso!';
         
-        // Atualiza a sessão para o caso de a troca ser obrigatória
+        // atualiza a senha para forcar trocar a senha
         if (isset($_SESSION['forcar_troca_senha'])) {
             $_SESSION['forcar_troca_senha'] = 0;    
         }
@@ -52,15 +52,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'chang
 }
 
 
-// --- LÓGICA DE ATUALIZAÇÃO DO PERFIL (Dados Editáveis) ---
+// dados editaveis
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'update_profile') {
     
     iniciar_transacao($conn);
 
     try {
         if (isAdmin()) {
-            // LÓGICA ESPECÍFICA PARA ADMIN: Edita todos os campos principais na tabela usuarios.
-            // Exclui apenas 'ativo', 'created_at', 'senha' e 'forcar_troca_senha'.
+            // admin pode editar a maioria dos campos da tabela usuarios
+
             $sql_admin_user = "UPDATE usuarios SET 
                 nome = ?, email = ?, cpf = ?, rg = ?, data_nascimento = ?, 
                 telefone = ?, cidade = ?, endereco = ?, complemento = ? 
@@ -72,22 +73,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'updat
             ]);
 
         } else {
-            // LÓGICA PADRÃO PARA ALUNO/PROFESSOR: Apenas campos não críticos.
+            // prof/aluno podem editar campos nao criticos
             $sql_user = "UPDATE usuarios SET telefone = ?, cidade = ?, endereco = ?, complemento = ? WHERE id = ?";
             executar_consulta($conn, $sql_user, [
                 $_POST['telefone'], $_POST['cidade'], $_POST['endereco'], $_POST['complemento'], $usuario_id
             ]);
 
-            if (isAluno()) {
-                // Atualiza a tabela ALUNOS
+            if (isAluno()) { //atualizar table alunos 
                 $aluno_id = $_POST['aluno_id'];
                 $sql_aluno = "UPDATE alunos SET instrumento = ?, nivel_experiencia = ?, preferencia_horario = ?, possui_instrumento = ?, objetivos = ? WHERE id = ?";
                 executar_consulta($conn, $sql_aluno, [
                     $_POST['instrumento'], $_POST['nivel_experiencia'],
                     $_POST['preferencia_horario'], isset($_POST['possui_instrumento']) ? 1 : 0, $_POST['objetivos'], $aluno_id
                 ]);
-            } elseif (isProfessor()) {
-                // Atualiza a tabela PROFESSORES
+            } elseif (isProfessor()) { //atualizar table professores
                 $professor_id = $_POST['professor_id'];
                 $sql_prof = "UPDATE professores SET formacao = ?, instrumentos_leciona = ?, biografia = ? WHERE id = ?";
                 executar_consulta($conn, $sql_prof, [
@@ -97,8 +96,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'updat
         }
         
         confirmar_transacao($conn);
-        // Recarrega os dados para exibir os novos valores imediatamente
-        // O restante do código abaixo recarrega, então podemos apenas emitir a mensagem
+        // recarrega os valores do formulario imediatamente
+
         $message = 'Dados de perfil atualizados com sucesso!';
         
     } catch (Exception $e) {
@@ -108,7 +107,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'updat
 }
 
 
-// --- LÓGICA PARA CARREGAR DADOS DO PERFIL (Recarregar após updates) ---
+//carregar dados do perfil
 try {
     $sql = '';
     
@@ -122,8 +121,7 @@ try {
                 FROM professores p
                 JOIN usuarios u ON p.usuario_id = u.id
                 WHERE u.id = ? AND u.tipo = 'professor' LIMIT 1";
-    } elseif (isAdmin()) { // <<< ADICIONADO: Lógica para o Administrador
-                            // O administrador só busca dados da tabela 'usuarios'.
+    } elseif (isAdmin()) { 
         $sql = "SELECT u.*, u.id AS usuario_id
                 FROM usuarios u
                 WHERE u.id = ? AND u.tipo = 'admin' LIMIT 1";
@@ -165,11 +163,11 @@ try {
 
         <div class="form-section">
             
-            <?php $readonlyAttr = isAdmin() ? '' : 'readonly'; // Define o atributo readonly condicionalmente?>
+            <?php $readonlyAttr = isAdmin() ? '' : 'readonly'; // condicao de readonly, se o usuario for admin não será um readonly ?>
 
             <?php if (isAdmin()): ?>
                 <h4> Dados Pessoais (Admin Editável)</h4>
-                <p class="alert alert-info">Como administrador, você pode editar todos os seus dados pessoais (exceto ID e datas de sistema).</p>
+                <p class="alert alert-info">Como administrador, você pode editar todos os seus dados pessoais (exceto ID).</p>
             <?php else: ?>
                 <h4> Dados Pessoais (Não Editáveis por aqui)</h4>
                 <p class="alert alert-info">Estes campos (Nome, CPF, RG, Data de Nasc.) são críticos e só podem ser alterados mediante solicitação e aprovação de um administrador.</p>
@@ -180,12 +178,12 @@ try {
                 <div class="form-group"><label>Email:</label><input type="email" name="email" required <?php echo $readonlyAttr; ?> value="<?php echo htmlspecialchars($userData['email'] ?? ''); ?>"></div>
             </div>
             <div class="form-row">
-                <div class="form-group"><label>CPF:</label><input type="text" readonly name="cpf" <?php echo $readonlyAttr; ?> value="<?php echo htmlspecialchars($userData['cpf'] ?? ''); ?>"></div>
-                <div class="form-group"><label>RG:</label><input type="text" readonly name="rg" <?php echo $readonlyAttr; ?> value="<?php echo htmlspecialchars($userData['rg'] ?? ''); ?>"></div>
+                <div class="form-group"><label>CPF:</label><input type="text"  id="cpf" name="cpf" <?php echo $readonlyAttr; ?> value="<?php echo htmlspecialchars($userData['cpf'] ?? ''); ?>"></div>
+                <div class="form-group"><label>RG:</label><input type="text"  id="rg" name="rg" <?php echo $readonlyAttr; ?> value="<?php echo htmlspecialchars($userData['rg'] ?? ''); ?>"></div>
             </div>
             <div class="form-row">
-                <div class="form-group"><label>Data de Nascimento:</label><input type="date" readonly name="data_nascimento" <?php echo $readonlyAttr; ?> value="<?php echo htmlspecialchars($userData['data_nascimento'] ?? ''); ?>"></div>
-                <div class="form-group"><label>Telefone:</label><input type="text" required name="telefone" value="<?php echo htmlspecialchars($userData['telefone'] ?? ''); ?>"></div>
+                <div class="form-group"><label>Data de Nascimento:</label><input type="date"  id="data_nascimento" name="data_nascimento" <?php echo $readonlyAttr; ?> value="<?php echo htmlspecialchars($userData['data_nascimento'] ?? ''); ?>"></div>
+                <div class="form-group"><label>Telefone:</label><input type="text" required id="telefone" name="telefone" value="<?php echo htmlspecialchars($userData['telefone'] ?? ''); ?>"></div>
             </div>
              <div class="form-row">
                 <div class="form-group"><label>Cidade:</label><input type="text" name="cidade" required value="<?php echo htmlspecialchars($userData['cidade'] ?? ''); ?>"></div>
@@ -283,8 +281,8 @@ try {
         </div>
 
         <?php 
-            if (isProfessor() || isAluno()):  ?> 
-            echo "<div class="form-section" style="margin-top: 30px;">
+            if (isProfessor() || isAluno()):  ?>
+           <div class="form-section" style="margin-top: 30px;">
                     <h4> Precisa Alterar Dados Pessoais Críticos?</h4>
                     <p>Seus dados pessoais CRÍTICOS (Nome, CPF, RG, Data de Nascimento) só podem ser alterados mediante solicitação e aprovação de um administrador.</p>
                         <div class="flex gap-10 mt-10">
@@ -295,7 +293,7 @@ try {
                             Ver Minhas Solicitações
                             </a>
                         </div>
-                    </div>";
+                    </div>
     
         <?php endif; ?>
          
@@ -313,7 +311,7 @@ try {
         const status = document.getElementById('password_match_status');
         const button = document.getElementById('btnChangePassword');
 
-        // Verifica se ambas as senhas têm pelo menos 8 caracteres e se são iguais
+        // verifica se ambas as senhas tem pelo menos 8 caracteres e se sao iguais
         if (newPass.length >= 8 && newPass === confirmPass) {
             status.textContent = 'As senhas são iguais.';
             status.style.color = '#28a745';
@@ -337,8 +335,122 @@ try {
         checkPasswordMatch(confirmPassInput);
     });
 
-    // Adiciona o listener de input para a confirmação de senha também, caso o usuário comece por ela
+    // adiciona o listener de input para a confirmação de senha, caso o usuário comece por ela
     document.getElementById('confirm_new_password').addEventListener('input', function() {
         checkPasswordMatch(this);
+    });
+</script>
+
+
+<script>
+    // formatacao
+
+    // formatar data
+    function formatarDataInput(event) {
+        let input = event.target;
+        // remove tudo que nao for digito
+        let valor = input.value.replace(/\D/g, '');
+        let tamanho = valor.length;
+
+
+        if (tamanho > 2) {
+            valor = valor.substring(0, 2) + '/' + valor.substring(2);
+        }
+  
+        if (tamanho > 4) {
+
+            valor = valor.substring(0, 5) + '/' + valor.substring(5, 9); 
+        }
+        
+        // atualiza o valor no campo
+        input.value = valor;
+    }
+
+    // formatar cpf
+    function formatarCPF(event) {
+        let input = event.target;
+        let value = input.value.replace(/\D/g, '');
+        value = value.replace(/(\d{3})(\d)/, '$1.$2');
+        value = value.replace(/(\d{3})(\d)/, '$1.$2');
+        value = value.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+        input.value = value;
+    }
+
+    // formatar rg
+    function formatarRG(event) {
+        let input = event.target;
+        let value = input.value.replace(/\D/g, '');
+        value = value.replace(/^(\d{2})(\d)/, '$1.$2');
+        value = value.replace(/^(\d{2})\.(\d{3})(\d)/, '$1.$2.$3');
+        value = value.replace(/\.(\d{3})(\d)$/, '.$1-$2');
+        input.value = value.substring(0, 12); // é o um maxlenght da vida
+    }
+
+    // formatar telefone
+    function formatarTelefone(event) {
+        let input = event.target;
+        let value = input.value.replace(/\D/g, '');
+        value = value.replace(/^(\d{2})(\d)/g, '($1) $2');
+        value = value.replace(/(\d{5})(\d)/, '$1-$2');
+        input.setAttribute('maxlength', '15'); 
+        input.value = value;
+    }
+
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        //flatpickr
+        flatpickr("#data_nascimento", {
+            locale: "pt", 
+            dateFormat: "Y-m-d", // formato date para o db
+            altInput: true, 
+            altFormat: "d/m/Y", 
+            allowInput: true,
+            
+            // coloca o maxlenght no input do date
+            onReady: function(selectedDates, dateStr, instance) {
+                instance.altInput.setAttribute('maxlength', '10');
+                instance.altInput.addEventListener('input', formatarDataInput);
+                
+                //mostrar o input da data
+                const dataInputVisivel = instance.altInput;
+                
+
+                instance.set('onChange', function() {
+                    document.getElementById('data_nascimento').dispatchEvent(new Event('change'));
+                });
+                
+                dataInputVisivel.addEventListener('blur', function() {
+
+                    document.getElementById('data_nascimento').dispatchEvent(new Event('change'));
+                });
+            }
+        });
+
+    
+        const cpfInput = document.getElementById('cpf');
+        if (cpfInput) {
+            cpfInput.setAttribute('maxlength', '14'); 
+            cpfInput.addEventListener('input', formatarCPF);
+        }
+
+        
+        const rgInput = document.getElementById('rg');
+        if (rgInput) {
+            rgInput.setAttribute('maxlength', '12'); 
+            rgInput.addEventListener('input', formatarRG);
+        }
+        
+       
+        const telInput = document.getElementById('telefone');
+        if (telInput) {
+            telInput.addEventListener('input', formatarTelefone);
+        }
+        
+        
+        const telResponsavelInput = document.getElementById('telefone_responsavel');
+        if (telResponsavelInput) {
+            telResponsavelInput.addEventListener('input', formatarTelefone);
+        }
     });
 </script>
