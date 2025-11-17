@@ -43,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'chang
         
         // Atualiza a sessão para o caso de a troca ser obrigatória
         if (isset($_SESSION['forcar_troca_senha'])) {
-            $_SESSION['forcar_troca_senha'] = 0; 
+            $_SESSION['forcar_troca_senha'] = 0;    
         }
 
     } catch (Exception $e) {
@@ -58,31 +58,47 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'updat
     iniciar_transacao($conn);
 
     try {
-        // Atualiza a tabela USUARIOS (campos não-críticos)
-        $sql_user = "UPDATE usuarios SET telefone = ?, cidade = ?, endereco = ?, complemento = ? WHERE id = ?";
-        executar_consulta($conn, $sql_user, [
-            $_POST['telefone'], $_POST['cidade'], $_POST['endereco'], $_POST['complemento'], $usuario_id
-        ]);
-        
-        if (isAluno()) {
-            // Atualiza a tabela ALUNOS
-            $aluno_id = $_POST['aluno_id'];
-            $sql_aluno = "UPDATE alunos SET instrumento = ?, nivel_experiencia = ?, preferencia_horario = ?, possui_instrumento = ?, objetivos = ? WHERE id = ?";
-            executar_consulta($conn, $sql_aluno, [
-                $_POST['instrumento'], $_POST['nivel_experiencia'],
-                $_POST['preferencia_horario'], isset($_POST['possui_instrumento']) ? 1 : 0, $_POST['objetivos'], $aluno_id
-            ]);
+        if (isAdmin()) {
+            // LÓGICA ESPECÍFICA PARA ADMIN: Edita todos os campos principais na tabela usuarios.
+            // Exclui apenas 'ativo', 'created_at', 'senha' e 'forcar_troca_senha'.
+            $sql_admin_user = "UPDATE usuarios SET 
+                nome = ?, email = ?, cpf = ?, rg = ?, data_nascimento = ?, 
+                telefone = ?, cidade = ?, endereco = ?, complemento = ? 
+                WHERE id = ?";
             
-        } elseif (isProfessor()) {
-            // Atualiza a tabela PROFESSORES
-            $professor_id = $_POST['professor_id'];
-            $sql_prof = "UPDATE professores SET formacao = ?, instrumentos_leciona = ?, biografia = ? WHERE id = ?";
-            executar_consulta($conn, $sql_prof, [
-                $_POST['formacao'], $_POST['instrumentos_leciona'], $_POST['biografia'], $professor_id
+            executar_consulta($conn, $sql_admin_user, [
+                $_POST['nome'], $_POST['email'], $_POST['cpf'], $_POST['rg'], $_POST['data_nascimento'],
+                $_POST['telefone'], $_POST['cidade'], $_POST['endereco'], $_POST['complemento'], $usuario_id
             ]);
+
+        } else {
+            // LÓGICA PADRÃO PARA ALUNO/PROFESSOR: Apenas campos não críticos.
+            $sql_user = "UPDATE usuarios SET telefone = ?, cidade = ?, endereco = ?, complemento = ? WHERE id = ?";
+            executar_consulta($conn, $sql_user, [
+                $_POST['telefone'], $_POST['cidade'], $_POST['endereco'], $_POST['complemento'], $usuario_id
+            ]);
+
+            if (isAluno()) {
+                // Atualiza a tabela ALUNOS
+                $aluno_id = $_POST['aluno_id'];
+                $sql_aluno = "UPDATE alunos SET instrumento = ?, nivel_experiencia = ?, preferencia_horario = ?, possui_instrumento = ?, objetivos = ? WHERE id = ?";
+                executar_consulta($conn, $sql_aluno, [
+                    $_POST['instrumento'], $_POST['nivel_experiencia'],
+                    $_POST['preferencia_horario'], isset($_POST['possui_instrumento']) ? 1 : 0, $_POST['objetivos'], $aluno_id
+                ]);
+            } elseif (isProfessor()) {
+                // Atualiza a tabela PROFESSORES
+                $professor_id = $_POST['professor_id'];
+                $sql_prof = "UPDATE professores SET formacao = ?, instrumentos_leciona = ?, biografia = ? WHERE id = ?";
+                executar_consulta($conn, $sql_prof, [
+                    $_POST['formacao'], $_POST['instrumentos_leciona'], $_POST['biografia'], $professor_id
+                ]);
+            }
         }
         
         confirmar_transacao($conn);
+        // Recarrega os dados para exibir os novos valores imediatamente
+        // O restante do código abaixo recarrega, então podemos apenas emitir a mensagem
         $message = 'Dados de perfil atualizados com sucesso!';
         
     } catch (Exception $e) {
@@ -106,6 +122,11 @@ try {
                 FROM professores p
                 JOIN usuarios u ON p.usuario_id = u.id
                 WHERE u.id = ? AND u.tipo = 'professor' LIMIT 1";
+    } elseif (isAdmin()) { // <<< ADICIONADO: Lógica para o Administrador
+                            // O administrador só busca dados da tabela 'usuarios'.
+        $sql = "SELECT u.*, u.id AS usuario_id
+                FROM usuarios u
+                WHERE u.id = ? AND u.tipo = 'admin' LIMIT 1";
     }
 
     if (!empty($sql)) {
@@ -143,23 +164,32 @@ try {
         <?php endif; ?>
 
         <div class="form-section">
-            <h4> Dados Pessoais (Não Editáveis por aqui)</h4>
-            <p class="alert alert-info">Estes campos (Nome, CPF, RG, Data de Nasc.) são críticos e só podem ser alterados mediante solicitação e aprovação de um administrador.</p>
+            
+            <?php $readonlyAttr = isAdmin() ? '' : 'readonly'; // Define o atributo readonly condicionalmente?>
+
+            <?php if (isAdmin()): ?>
+                <h4> Dados Pessoais (Admin Editável)</h4>
+                <p class="alert alert-info">Como administrador, você pode editar todos os seus dados pessoais (exceto ID e datas de sistema).</p>
+            <?php else: ?>
+                <h4> Dados Pessoais (Não Editáveis por aqui)</h4>
+                <p class="alert alert-info">Estes campos (Nome, CPF, RG, Data de Nasc.) são críticos e só podem ser alterados mediante solicitação e aprovação de um administrador.</p>
+            <?php endif; ?>
+            
             <div class="form-row">
-                <div class="form-group"><label>Nome Completo:</label><input type="text" readonly value="<?php echo htmlspecialchars($userData['nome'] ?? ''); ?>"></div>
-                <div class="form-group"><label>Email:</label><input type="email" readonly value="<?php echo htmlspecialchars($userData['email'] ?? ''); ?>"></div>
+                <div class="form-group"><label>Nome Completo:</label><input type="text" name="nome" required <?php echo $readonlyAttr; ?> value="<?php echo htmlspecialchars($userData['nome'] ?? ''); ?>"></div>
+                <div class="form-group"><label>Email:</label><input type="email" name="email" required <?php echo $readonlyAttr; ?> value="<?php echo htmlspecialchars($userData['email'] ?? ''); ?>"></div>
             </div>
             <div class="form-row">
-                <div class="form-group"><label>CPF:</label><input type="text" readonly value="<?php echo htmlspecialchars($userData['cpf'] ?? ''); ?>"></div>
-                <div class="form-group"><label>RG:</label><input type="text" readonly value="<?php echo htmlspecialchars($userData['rg'] ?? ''); ?>"></div>
+                <div class="form-group"><label>CPF:</label><input type="text" readonly name="cpf" <?php echo $readonlyAttr; ?> value="<?php echo htmlspecialchars($userData['cpf'] ?? ''); ?>"></div>
+                <div class="form-group"><label>RG:</label><input type="text" readonly name="rg" <?php echo $readonlyAttr; ?> value="<?php echo htmlspecialchars($userData['rg'] ?? ''); ?>"></div>
             </div>
             <div class="form-row">
-                <div class="form-group"><label>Data de Nascimento:</label><input type="date" readonly value="<?php echo htmlspecialchars($userData['data_nascimento'] ?? ''); ?>"></div>
-                <div class="form-group"><label>Telefone:</label><input type="text" name="telefone" value="<?php echo htmlspecialchars($userData['telefone'] ?? ''); ?>"></div>
+                <div class="form-group"><label>Data de Nascimento:</label><input type="date" readonly name="data_nascimento" <?php echo $readonlyAttr; ?> value="<?php echo htmlspecialchars($userData['data_nascimento'] ?? ''); ?>"></div>
+                <div class="form-group"><label>Telefone:</label><input type="text" required name="telefone" value="<?php echo htmlspecialchars($userData['telefone'] ?? ''); ?>"></div>
             </div>
              <div class="form-row">
-                <div class="form-group"><label>Cidade:</label><input type="text" name="cidade" value="<?php echo htmlspecialchars($userData['cidade'] ?? ''); ?>"></div>
-                <div class="form-group"><label>Endereço:</label><input type="text" name="endereco" value="<?php echo htmlspecialchars($userData['endereco'] ?? ''); ?>"></div>
+                <div class="form-group"><label>Cidade:</label><input type="text" name="cidade" required value="<?php echo htmlspecialchars($userData['cidade'] ?? ''); ?>"></div>
+                <div class="form-group"><label>Endereço:</label><input type="text" name="endereco" required value="<?php echo htmlspecialchars($userData['endereco'] ?? ''); ?>"></div>
                 <div class="form-group"><label>Complemento:</label><input type="text" name="complemento" value="<?php echo htmlspecialchars($userData['complemento'] ?? ''); ?>"></div>
             </div>
         </div>
@@ -213,11 +243,11 @@ try {
         <div class="form-section">
             <h4> Dados de Professor Editáveis</h4>
             <div class="form-row">
-                <div class="form-group"><label>Formação:</label><input type="text" name="formacao" value="<?php echo htmlspecialchars($userData['formacao'] ?? ''); ?>"></div>
+                <div class="form-group"><label>Formação:</label><input type="text" required name="formacao" value="<?php echo htmlspecialchars($userData['formacao'] ?? ''); ?>"></div>
                 <div class="form-group"><label>Data Contratação:</label><input type="date" readonly value="<?php echo htmlspecialchars($userData['data_contratacao'] ?? ''); ?>"></div>
             </div>
              <div class="form-row">
-                <div class="form-group"><label>Instrumentos:</label><input type="text" name="instrumentos_leciona" value="<?php echo htmlspecialchars($userData['instrumentos_leciona'] ?? ''); ?>"></div>
+                <div class="form-group"><label>Instrumentos:</label><input type="text" required name="instrumentos_leciona" value="<?php echo htmlspecialchars($userData['instrumentos_leciona'] ?? ''); ?>"></div>
             </div>
             <div class="form-group"><label>Biografia:</label><textarea name="biografia" rows="3"><?php echo htmlspecialchars($userData['biografia'] ?? ''); ?></textarea></div>
         </div>
@@ -252,18 +282,26 @@ try {
                 </form>
         </div>
 
-        <div class="form-section" style="margin-top: 30px;">
-            <h4> Precisa Alterar Dados Pessoais Críticos?</h4>
-            <p>Seus dados pessoais CRÍTICOS (Nome, CPF, RG, Data de Nascimento) só podem ser alterados mediante solicitação e aprovação de um administrador.</p>
-            <div class="flex gap-10 mt-10">
-                <a href="dashboard.php?page=solicitar-dados" class="btn btn-secondary">
-                    Criar Nova Solicitação
-                </a>
-                <a href="dashboard.php?page=minhas_solicitacoes" class="btn btn-outline">
-                    Ver Minhas Solicitações
-                </a>
-            </div>
-        </div>
+        <?php 
+            if (isProfessor() || isAluno()):  ?> 
+            echo "<div class="form-section" style="margin-top: 30px;">
+                    <h4> Precisa Alterar Dados Pessoais Críticos?</h4>
+                    <p>Seus dados pessoais CRÍTICOS (Nome, CPF, RG, Data de Nascimento) só podem ser alterados mediante solicitação e aprovação de um administrador.</p>
+                        <div class="flex gap-10 mt-10">
+                            <a href="dashboard.php?page=solicitar-dados" class="btn btn-secondary">
+                                Criar Nova Solicitação
+                            </a>
+                            <a href="dashboard.php?page=minhas_solicitacoes" class="btn btn-outline">
+                            Ver Minhas Solicitações
+                            </a>
+                        </div>
+                    </div>";
+    
+        <?php endif; ?>
+         
+        
+        
+        
 
     <?php endif; ?>
 </div>

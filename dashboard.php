@@ -52,7 +52,7 @@ $page = $_GET['page'] ?? 'home';
             <li><a href="dashboard.php?page=chamadas" class="<?php echo $page === 'chamadas' ? 'active' : ''; ?>">Aulas</a></li>
             <?php endif; ?>
 
-            <?php if(isAluno() || isProfessor()): ?>
+            <?php if(isAluno() || isProfessor() || isAdmin()): ?>
             <li><a href="dashboard.php?page=perfil" class="<?php echo $page === 'perfil' ? 'active' : ''; ?>">Dados Pessoais</a></li>
             <?php endif; ?>
         </ul>
@@ -87,7 +87,7 @@ $page = $_GET['page'] ?? 'home';
                 break;
 
              case 'perfil':
-                if(isAluno() || isProfessor()) include 'pages/meu_perfil.php';
+                if(isAluno() || isProfessor() || isAdmin()) include 'pages/meu_perfil.php';
                 break;
 
                 case 'minhas_solicitacoes':
